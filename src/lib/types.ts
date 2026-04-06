@@ -87,6 +87,8 @@ export interface IntegranteHogar {
   ingresos: number | null;
   estado_civil?: string;
   contacto?: string;
+  eps?: string;
+  regimen_salud?: string;
   orden: number;
 }
 

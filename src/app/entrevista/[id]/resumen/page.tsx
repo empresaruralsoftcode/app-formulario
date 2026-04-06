@@ -175,6 +175,7 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
                   <th>Actividad</th>
                   <th>Est. Civil</th>
                   <th>Contacto</th>
+                  <th>Salud</th>
                 </tr>
               </thead>
               <tbody>
@@ -187,6 +188,7 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
                     <td>{ig.actividad_principal}</td>
                     <td>{ig.estado_civil}</td>
                     <td>{ig.contacto}</td>
+                    <td>{ig.eps} - {ig.regimen_salud}</td>
                   </tr>
                 ))}
               </tbody>

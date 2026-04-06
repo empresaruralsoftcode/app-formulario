@@ -31,17 +31,75 @@ function calculateAge(birthDate?: string): number | null {
 }
 
 function ChipSelector({ options, selected, onChange }: { options: string[]; selected: string[]; onChange: (v: string[]) => void }) {
+  const isOtroVariant = (opt: string) => opt.toLowerCase() === 'otro' || opt.toLowerCase() === 'otra';
+  const getOtroString = () => selected.find(s => s.startsWith('Otro:') || s.startsWith('Otra:') || isOtroVariant(s));
+  const hasOtro = getOtroString() !== undefined;
+
   const toggle = (opt: string) => {
-    if (selected.includes(opt)) onChange(selected.filter(s => s !== opt));
-    else onChange([...selected, opt]);
+    if (isOtroVariant(opt)) {
+      const existing = getOtroString();
+      if (existing) onChange(selected.filter(s => s !== existing));
+      else onChange([...selected, `${opt}: `]);
+    } else {
+      if (selected.includes(opt)) onChange(selected.filter(s => s !== opt));
+      else onChange([...selected, opt]);
+    }
   };
+
   return (
-    <div className="radio-group">
-      {options.map(opt => (
-        <button key={opt} type="button" className={`chip ${selected.includes(opt) ? 'chip-selected' : 'chip-unselected'}`} onClick={() => toggle(opt)}>
-          {opt}
-        </button>
-      ))}
+    <div>
+      <div className="radio-group" style={{ marginBottom: hasOtro ? 'var(--space-2)' : '0' }}>
+        {options.map(opt => {
+          const isSelected = isOtroVariant(opt) ? hasOtro : selected.includes(opt);
+          return (
+            <button key={opt} type="button" className={`chip ${isSelected ? 'chip-selected' : 'chip-unselected'}`} onClick={() => toggle(opt)}>
+              {opt}
+            </button>
+          )
+        })}
+      </div>
+      {hasOtro && (
+        <input 
+          className="input-field animate-slide-up" 
+          placeholder={`¿Qué ${getOtroString()?.split(':')[0].toLowerCase() || 'otro'}? Especificar...`} 
+          value={getOtroString()?.split(': ')?.[1] || ''}
+          onChange={e => {
+            const optBase = getOtroString()?.split(':')[0] || 'Otro';
+            onChange([...selected.filter(s => s !== getOtroString()), `${optBase}: ${e.target.value}`]);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function RadioGroupWithOtro({ options, value, onChange }: { options: string[]; value: string | null; onChange: (v: string | null) => void }) {
+  const isOtroVariant = (opt: string) => opt.toLowerCase() === 'otro' || opt.toLowerCase() === 'otra';
+  const isOtroSelected = value !== null && (isOtroVariant(value) || value.startsWith('Otro:') || value.startsWith('Otra:'));
+  
+  return (
+    <div>
+      <div className="radio-group" style={{ marginBottom: isOtroSelected ? 'var(--space-2)' : '0' }}>
+        {options.map(opt => {
+          const isSelected = isOtroVariant(opt) ? isOtroSelected : value === opt;
+          return (
+            <button key={opt} type="button" className={`chip ${isSelected ? 'chip-selected' : 'chip-unselected'}`} onClick={() => onChange(isOtroVariant(opt) ? `${opt}: ` : opt)}>
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+      {isOtroSelected && (
+        <input 
+          className="input-field animate-slide-up" 
+          placeholder={`Especifique...`} 
+          value={value!.includes(': ') ? value!.split(': ')[1] : ''}
+          onChange={e => {
+            const optBase = value!.split(':')[0] || 'Otro';
+            onChange(`${optBase}: ${e.target.value}`);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -512,19 +570,12 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
             </div>
             <div className="form-section">
               <h3 className="form-section-title">Grupo Étnico</h3>
-              <div className="radio-group">
-                {T.GRUPOS_ETNICOS.map(g => <button key={g} type="button" className={`chip ${datosNNA.grupo_etnico === g ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setDatosNNA({...datosNNA, grupo_etnico: g})}>{g}</button>)}
-              </div>
+              <RadioGroupWithOtro options={T.GRUPOS_ETNICOS} value={datosNNA.grupo_etnico || null} onChange={v => setDatosNNA({...datosNNA, grupo_etnico: v || ''})} />
               {datosNNA.grupo_etnico === 'Indígena' && (
                 <div style={{ marginTop: 'var(--space-4)' }}>
                   <div className="input-group">
                     <label>Pueblo Indígena</label>
-                    <div className="radio-group">
-                      {T.PUEBLOS_INDIGENAS.map(p => <button key={p} type="button" className={`chip ${datosNNA.pueblo_indigena === p || (p === 'Otro' && datosNNA.pueblo_indigena?.startsWith('Otro:')) ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setDatosNNA({...datosNNA, pueblo_indigena: p === 'Otro' ? 'Otro: ' : p})}>{p}</button>)}
-                    </div>
-                    {datosNNA.pueblo_indigena?.startsWith('Otro') && (
-                      <input className="input-field" style={{ marginTop: 'var(--space-2)' }} value={datosNNA.pueblo_indigena.replace('Otro: ', '')} onChange={e => setDatosNNA({...datosNNA, pueblo_indigena: `Otro: ${e.target.value}`})} placeholder="Nombre del pueblo indígena..." />
-                    )}
+                    <RadioGroupWithOtro options={T.PUEBLOS_INDIGENAS} value={datosNNA.pueblo_indigena || null} onChange={v => setDatosNNA({...datosNNA, pueblo_indigena: v || ''})} />
                   </div>
                   <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
                     <label>Resguardo al que pertenece</label>
@@ -543,9 +594,7 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
               <h3 className="form-section-title">Habitabilidad del NNA</h3>
               <div className="input-group">
                 <label>Lugar de Descanso</label>
-                <div className="radio-group">
-                  {T.LUGARES_DESCANSO.map(l => <button key={l} type="button" className={`chip ${condiciones.lugar_descanso === l ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setCondiciones({...condiciones, lugar_descanso: l})}>{l}</button>)}
-                </div>
+                <RadioGroupWithOtro options={T.LUGARES_DESCANSO} value={condiciones.lugar_descanso || null} onChange={v => setCondiciones({...condiciones, lugar_descanso: v || ''})} />
               </div>
               <div className="form-row" style={{ marginTop: 'var(--space-4)' }}>
                 <BooleanSelect label="¿Duerme con adultos en la misma habitación?" value={condiciones.duerme_con_adultos_habitacion ?? null} onChange={v => setCondiciones({...condiciones, duerme_con_adultos_habitacion: v})} />
@@ -567,9 +616,7 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
               {condiciones.afiliacion_salud === 'no_afiliado' && (
                 <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
                   <label>Motivo de No Afiliación</label>
-                  <div className="radio-group">
-                    {T.MOTIVOS_NO_AFILIACION.map(m => <button key={m} type="button" className={`chip ${condiciones.motivo_no_afiliacion === m ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setCondiciones({...condiciones, motivo_no_afiliacion: m})}>{m}</button>)}
-                  </div>
+                  <RadioGroupWithOtro options={T.MOTIVOS_NO_AFILIACION} value={condiciones.motivo_no_afiliacion || null} onChange={v => setCondiciones({...condiciones, motivo_no_afiliacion: v || ''})} />
                 </div>
               )}
               <div className="form-row" style={{ marginTop: 'var(--space-4)' }}>
@@ -586,9 +633,7 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                   {condiciones.recibe_leche_materna === false && (
                     <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
                       <label>Motivo de Suspensión</label>
-                      <div className="radio-group">
-                        {T.MOTIVOS_SUSPENSION_LACTANCIA.map(m => <button key={m} type="button" className={`chip ${condiciones.motivo_suspension_lactancia === m ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setCondiciones({...condiciones, motivo_suspension_lactancia: m})}>{m}</button>)}
-                      </div>
+                      <RadioGroupWithOtro options={T.MOTIVOS_SUSPENSION_LACTANCIA} value={condiciones.motivo_suspension_lactancia || null} onChange={v => setCondiciones({...condiciones, motivo_suspension_lactancia: v || ''})} />
                     </div>
                   )}
                   <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
@@ -675,6 +720,19 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                     <div className="input-group"><label>Estado Civil</label><input className="input-field" value={ig.estado_civil || ''} onChange={e => updateIntegrante(i, 'estado_civil', e.target.value)} placeholder="Ej: Soltero(a), Casado(a)" /></div>
                     <div className="input-group"><label>Contacto (Número de celular)</label><input className="input-field" type="tel" value={ig.contacto || ''} onChange={e => updateIntegrante(i, 'contacto', e.target.value)} placeholder="Ej: 3001234567" /></div>
                   </div>
+                  <div className="form-row">
+                    <div className="input-group"><label>EPS</label><input className="input-field" value={ig.eps || ''} onChange={e => updateIntegrante(i, 'eps', e.target.value)} placeholder="Ej: Sanitas, Sura..." /></div>
+                    <div className="input-group">
+                      <label>Régimen de Salud</label>
+                      <select className="input-field" value={ig.regimen_salud || ''} onChange={e => updateIntegrante(i, 'regimen_salud', e.target.value)}>
+                        <option value="">Seleccione...</option>
+                        <option value="Subsidiado">Subsidiado</option>
+                        <option value="Contributivo">Contributivo</option>
+                        <option value="Especial/Excepción">Especial/Excepción</option>
+                        <option value="No afiliado">No afiliado</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
               ))}
               <button type="button" className="btn btn-secondary" onClick={addIntegrante}>
@@ -686,15 +744,11 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
               <h3 className="form-section-title">Dinámica Relacional</h3>
               <div className="input-group">
                 <label>Criterio de Liderazgo Familiar</label>
-                <div className="radio-group">
-                  {T.CRITERIOS_LIDERAZGO.map(c => <button key={c} type="button" className={`chip ${dinamica.criterio_liderazgo === c ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setDinamica({...dinamica, criterio_liderazgo: c})}>{c}</button>)}
-                </div>
+                <RadioGroupWithOtro options={T.CRITERIOS_LIDERAZGO} value={dinamica.criterio_liderazgo || null} onChange={v => setDinamica({...dinamica, criterio_liderazgo: v || ''})} />
               </div>
               <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
                 <label>Vínculo Afectivo Más Fuerte</label>
-                <div className="radio-group">
-                  {T.VINCULOS_AFECTIVOS.map(v => <button key={v} type="button" className={`chip ${dinamica.vinculo_afectivo_fuerte === v ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setDinamica({...dinamica, vinculo_afectivo_fuerte: v})}>{v}</button>)}
-                </div>
+                <RadioGroupWithOtro options={T.VINCULOS_AFECTIVOS} value={dinamica.vinculo_afectivo_fuerte || null} onChange={v => setDinamica({...dinamica, vinculo_afectivo_fuerte: v || ''})} />
               </div>
               <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
                 <label>Actividades Familiares</label>
@@ -727,15 +781,11 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
               <h3 className="form-section-title">Características de la Vivienda</h3>
               <div className="input-group">
                 <label>Ubicación</label>
-                <div className="radio-group">
-                  {T.UBICACIONES_VIVIENDA.map(u => <button key={u} type="button" className={`chip ${vulnerabilidad.ubicacion_vivienda === u ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setVulnerabilidad({...vulnerabilidad, ubicacion_vivienda: u})}>{u}</button>)}
-                </div>
+                <RadioGroupWithOtro options={T.UBICACIONES_VIVIENDA} value={vulnerabilidad.ubicacion_vivienda || null} onChange={v => setVulnerabilidad({...vulnerabilidad, ubicacion_vivienda: v || ''})} />
               </div>
               <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
                 <label>Tipo de Vivienda</label>
-                <div className="radio-group">
-                  {T.TIPOS_VIVIENDA.map(t => <button key={t} type="button" className={`chip ${vulnerabilidad.tipo_vivienda === t ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setVulnerabilidad({...vulnerabilidad, tipo_vivienda: t})}>{t}</button>)}
-                </div>
+                <RadioGroupWithOtro options={T.TIPOS_VIVIENDA} value={vulnerabilidad.tipo_vivienda || null} onChange={v => setVulnerabilidad({...vulnerabilidad, tipo_vivienda: v || ''})} />
               </div>
               <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
                 <label>Servicios Públicos</label>
