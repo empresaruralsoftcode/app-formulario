@@ -228,10 +228,13 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
           <div className={styles.textBlock}>
             <h4>Metodología e Instrumentos Utilizados</h4>
             {(() => {
-              let metoData: any = {};
-              try { metoData = JSON.parse(analisis.metodologia_instrumentos || '{}'); } catch {}
+              let items: { instrumento: string, descripcion: string }[] = [];
+              try {
+                const parsed = JSON.parse(analisis.metodologia_instrumentos || '[]');
+                if (Array.isArray(parsed)) items = parsed;
+              } catch {}
               
-              if (!metoData.entrevista && !metoData.revision && !metoData.observacion && !metoData.analisis_socio) {
+              if (items.length === 0) {
                 return <p>Sin información registrada.</p>;
               }
               
@@ -244,30 +247,12 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
                     </tr>
                   </thead>
                   <tbody>
-                    {metoData.entrevista && (
-                      <tr>
-                        <td style={{ verticalAlign: 'top' }}><strong>Entrevista semi-estructurada:</strong></td>
-                        <td>{metoData.entrevista}</td>
+                    {items.map((item, i) => (
+                      <tr key={i}>
+                        <td style={{ verticalAlign: 'top' }}><strong>{item.instrumento}</strong></td>
+                        <td>{item.descripcion}</td>
                       </tr>
-                    )}
-                    {metoData.revision && (
-                      <tr>
-                        <td style={{ verticalAlign: 'top' }}><strong>Revisión Documental:</strong></td>
-                        <td>{metoData.revision}</td>
-                      </tr>
-                    )}
-                    {metoData.observacion && (
-                      <tr>
-                        <td style={{ verticalAlign: 'top' }}><strong>Observación directa:</strong></td>
-                        <td>{metoData.observacion}</td>
-                      </tr>
-                    )}
-                    {metoData.analisis_socio && (
-                      <tr>
-                        <td style={{ verticalAlign: 'top' }}><strong>Análisis sociofamiliar:</strong></td>
-                        <td>{metoData.analisis_socio}</td>
-                      </tr>
-                    )}
+                    ))}
                   </tbody>
                 </table>
               );
