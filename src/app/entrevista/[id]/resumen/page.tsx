@@ -389,8 +389,8 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
                   <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }} preserveAspectRatio="none" viewBox="0 0 1000 140">
                     {/* Línea inferior continua (debajo de todo) */}
                     <path d="M 0,135 L 1000,135" fill="none" stroke="#888" strokeWidth="2" strokeDasharray="5,5" vectorEffect="non-scaling-stroke" />
-                    {/* Forma de pliegue derecho (diagonal hacia arriba y horizontal sobre los logos) */}
-                    <path d="M 680,135 L 750,25 L 1000,25" fill="none" stroke="#888" strokeWidth="2" strokeDasharray="5,5" vectorEffect="non-scaling-stroke" />
+                    {/* Línea de doble escalón basada en el trazado rojo */}
+                    <path d="M 320,135 L 390,90 L 620,90 L 690,25 L 1000,25" fill="none" stroke="#888" strokeWidth="2" strokeDasharray="5,5" vectorEffect="non-scaling-stroke" />
                   </svg>
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1, height: '100%' }}>
