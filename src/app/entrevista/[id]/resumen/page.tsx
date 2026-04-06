@@ -277,6 +277,20 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
           </div>
         </section>
 
+        {entrevista.anexos_fotograficos && entrevista.anexos_fotograficos.length > 0 && (
+          <section className={styles.section} style={{ pageBreakInside: 'avoid' }}>
+            <h3 className={styles.sectionTitle}>8. Anexos Fotográficos</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+              {entrevista.anexos_fotograficos.map((url, idx) => (
+                <div key={idx} style={{ textAlign: 'center' }}>
+                  <img src={url} alt={`Anexo fotográfico ${idx + 1}`} style={{ width: '100%', maxHeight: '350px', objectFit: 'contain', borderRadius: '8px', border: '1px solid var(--outline-variant)' }} />
+                  <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--on-surface-variant)' }}>Anexo {idx + 1}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <div className={styles.signatures}>
           <div className={styles.signatureLine}>
             <span>Firma Profesional Responsable</span>

@@ -9,6 +9,7 @@ export interface Entrevista {
   dirigido_a: string;
   seccion: string;
   estado: 'borrador' | 'completado';
+  anexos_fotograficos?: string[];
   created_at?: string;
   updated_at?: string;
 }

@@ -14,6 +14,7 @@ const STEPS = [
   { id: 4, label: 'Vulnerabilidad', icon: '⚠️' },
   { id: 5, label: 'Cuidador', icon: '🤝' },
   { id: 6, label: 'Análisis Social', icon: '📝' },
+  { id: 7, label: 'Anexos Fotográficos', icon: '📸' },
 ];
 
 function calculateAge(birthDate?: string): number | null {
@@ -67,8 +68,7 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
 
   // Form Data
   const [entrevista, setEntrevista] = useState<Partial<T.Entrevista>>({
-    asunto: '', elaborado_por: 'Geidy Daniela Hurtado Muñoz', tarjeta_profesional: '1002979.363',
-    dirigido_a: 'Dr. Faber Arteaga Rivera', seccion: 'Trabajo Social - Comisaría de Familia', estado: 'borrador',
+    estado: 'borrador', elaborado_por: '', tarjeta_profesional: '', dirigido_a: '', asunto: '', anexos_fotograficos: [],
   });
   const [datosNNA, setDatosNNA] = useState<Partial<T.DatosNNA>>({
     pais_nacimiento: 'Colombia', nacionalidad: 'Colombiana', tiene_discapacidad: false,
@@ -132,14 +132,12 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
   function formatSupabaseError(err: any): string {
     if (!err) return 'Unknown error';
     if (typeof err === 'string') return err;
-    // Supabase errors have message, code, details, hint as direct properties
     const parts: string[] = [];
     if (err.message) parts.push(err.message);
     if (err.code) parts.push(`Code: ${err.code}`);
     if (err.details) parts.push(`Details: ${err.details}`);
     if (err.hint) parts.push(`Hint: ${err.hint}`);
     if (parts.length > 0) return parts.join(' | ');
-    // Fallback: try to get all own property names
     try {
       return JSON.stringify(err, Object.getOwnPropertyNames(err), 2);
     } catch {
@@ -155,38 +153,21 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
     }
     
     setSaving(true);
-    console.log('Saving step:', step, 'ID:', id);
     
     try {
-      // Always save the main entrevista record (Step 0)
-      {
-        const updatePayload: Record<string, unknown> = {
-          asunto: entrevista.asunto || null,
-          elaborado_por: entrevista.elaborado_por || null,
-          tarjeta_profesional: entrevista.tarjeta_profesional || null,
-          dirigido_a: entrevista.dirigido_a || null,
-        };
-        // Only include fecha_diligenciamiento if it has a valid value
-        if (entrevista.fecha_diligenciamiento) {
-          updatePayload.fecha_diligenciamiento = entrevista.fecha_diligenciamiento;
-        }
-
+      // Step 0: General + Anexos
+      if (step >= 0 || step === 7) {
+        const payload = { ...entrevista, id };
+        delete (payload as any).created_at;
         const { data: entData, error: entErr } = await supabase
           .from('entrevistas')
-          .update(updatePayload)
-          .eq('id', id)
+          .upsert(payload, { onConflict: 'id' })
           .select();
-        
         if (entErr) {
           console.error('Error saving entrevista:', formatSupabaseError(entErr));
           throw new Error(`Error guardando información general: ${formatSupabaseError(entErr)}`);
         }
-        if (!entData || entData.length === 0) {
-          console.error('No rows updated for entrevista — id may not exist:', id);
-          throw new Error('No se encontró la entrevista. El registro puede haber sido eliminado.');
-        }
-        setEntrevista(entData[0]);
-        console.log('Entrevista saved successfully');
+        if (entData && entData.length > 0) setEntrevista(entData[0]);
       }
 
       // Step 1: Datos NNA
@@ -233,7 +214,6 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
             delete (d as any).id; 
             delete (d as any).created_at;
             delete (d as any).edad;
-            // Convert empty strings to null for date/numeric fields
             if (!d.fecha_nacimiento) d.fecha_nacimiento = null as any;
             if (!d.numero_documento) d.numero_documento = null as any;
             return d;
@@ -366,7 +346,6 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className={styles.layout}>
-      {/* Sidebar Stepper */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarTop}>
           <button className={styles.backBtn} onClick={() => router.push('/dashboard')}>
@@ -398,9 +377,7 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className={styles.main}>
-        {/* Completed Banner */}
         {entrevista.estado === 'completado' && (
           <div className={styles.completedBanner}>
             <div className={styles.bannerContent}>
@@ -423,7 +400,6 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* Step 0: Info General */}
         {step === 0 && (
           <div className="animate-slide-up">
             <h2 className={styles.stepTitle}>Información de Control e Identificación</h2>
@@ -456,11 +432,9 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* Step 1: Datos NNA */}
         {step === 1 && (
           <div className="animate-slide-up">
             <h2 className={styles.stepTitle}>Datos del Niño, Niña o Adolescente</h2>
-
             <div className="form-section">
               <h3 className="form-section-title">Identificación</h3>
               <div className="form-row">
@@ -492,7 +466,6 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 </div>
               </div>
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Ubicación</h3>
               <div className="form-row">
@@ -506,7 +479,6 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
               </div>
               <div className="input-group"><label>Celular del Acudiente</label><input className="input-field" value={datosNNA.celular_acudiente || ''} onChange={e => setDatosNNA({...datosNNA, celular_acudiente: e.target.value})} /></div>
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Educación</h3>
               <div className="form-row">
@@ -514,7 +486,6 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 <div className="input-group"><label>Grado</label><input className="input-field" value={datosNNA.grado || ''} onChange={e => setDatosNNA({...datosNNA, grado: e.target.value})} /></div>
               </div>
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Discapacidad</h3>
               <BooleanSelect label="¿Tiene discapacidad?" value={datosNNA.tiene_discapacidad ?? null} onChange={v => setDatosNNA({...datosNNA, tiene_discapacidad: v ?? false})} />
@@ -533,7 +504,6 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 </>
               )}
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Grupo Étnico</h3>
               <div className="radio-group">
@@ -560,11 +530,9 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* Step 2: Condiciones Habitacionales */}
         {step === 2 && (
           <div className="animate-slide-up">
             <h2 className={styles.stepTitle}>Condiciones Habitacionales y de Salud</h2>
-
             <div className="form-section">
               <h3 className="form-section-title">Habitabilidad del NNA</h3>
               <div className="input-group">
@@ -578,7 +546,6 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 <BooleanSelect label="¿Duerme con adultos en la misma cama?" value={condiciones.duerme_con_adultos_cama ?? null} onChange={v => setCondiciones({...condiciones, duerme_con_adultos_cama: v})} />
               </div>
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Salud y Prevención</h3>
               <div className="form-row">
@@ -605,11 +572,8 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 <BooleanSelect label="Valoración Integral del Desarrollo" value={condiciones.valoracion_desarrollo ?? null} onChange={v => setCondiciones({...condiciones, valoracion_desarrollo: v})} />
               </div>
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Alimentación y Nutrición</h3>
-
-              {/* For children ≤ 2 years: breastfeeding questions */}
               {(datosNNA.edad === null || datosNNA.edad === undefined || datosNNA.edad <= 2) && (
                 <>
                   <BooleanSelect label="¿Recibe leche materna?" value={condiciones.recibe_leche_materna ?? null} onChange={v => setCondiciones({...condiciones, recibe_leche_materna: v})} />
@@ -627,8 +591,6 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                   </div>
                 </>
               )}
-
-              {/* For children > 2 years: nutrition assessment */}
               {datosNNA.edad != null && datosNNA.edad > 2 && (
                 <>
                   <div className="form-row">
@@ -637,12 +599,10 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                       <input type="number" className="input-field" min={1} max={10} value={condiciones.comidas_al_dia ?? ''} onChange={e => setCondiciones({...condiciones, comidas_al_dia: e.target.value ? Number(e.target.value) : null})} placeholder="Ej: 3" />
                     </div>
                   </div>
-
                   <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
                     <label>¿Qué comidas recibe habitualmente?</label>
                     <ChipSelector options={T.TIPOS_ALIMENTACION} selected={condiciones.tipo_alimentacion as string[] || []} onChange={v => setCondiciones({...condiciones, tipo_alimentacion: v})} />
                   </div>
-
                   <div style={{ marginTop: 'var(--space-4)' }}>
                     <label className="label-lg" style={{ marginBottom: 'var(--space-3)', display: 'block' }}>Consumo de Grupos Alimenticios</label>
                     <div className="form-row">
@@ -654,11 +614,9 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                       <BooleanSelect label="¿Toma suficiente agua al día?" value={condiciones.consume_agua_suficiente ?? null} onChange={v => setCondiciones({...condiciones, consume_agua_suficiente: v})} />
                     </div>
                   </div>
-
                   <div className="form-row" style={{ marginTop: 'var(--space-4)' }}>
                     <BooleanSelect label="¿Tiene horarios regulares de alimentación?" value={condiciones.tiene_horario_alimentacion ?? null} onChange={v => setCondiciones({...condiciones, tiene_horario_alimentacion: v})} />
                   </div>
-
                   <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
                     <label>Observaciones sobre la nutrición del NNA</label>
                     <textarea className="input-field" rows={3} value={condiciones.observaciones_nutricion || ''} onChange={e => setCondiciones({...condiciones, observaciones_nutricion: e.target.value})} placeholder="Estado nutricional observado, señales de desnutrición, sobrepeso, etc." />
@@ -669,11 +627,9 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* Step 3: Estructura Familiar */}
         {step === 3 && (
           <div className="animate-slide-up">
             <h2 className={styles.stepTitle}>Estructura y Dinámica Familiar</h2>
-
             <div className="form-section">
               <h3 className="form-section-title">Integrantes del Hogar</h3>
               {integrantes.map((ig, i) => (
@@ -716,7 +672,6 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 Agregar Integrante
               </button>
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Dinámica Relacional</h3>
               <div className="input-group">
@@ -747,21 +702,17 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* Step 4: Vulnerabilidad y Entorno */}
         {step === 4 && (
           <div className="animate-slide-up">
             <h2 className={styles.stepTitle}>Vulnerabilidad y Entorno</h2>
-
             <div className="form-section">
               <h3 className="form-section-title">Eventos de Violencia en el Hogar</h3>
               <ChipSelector options={T.EVENTOS_VIOLENCIA} selected={vulnerabilidad.eventos_violencia as string[] || []} onChange={v => setVulnerabilidad({...vulnerabilidad, eventos_violencia: v})} />
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Redes de Apoyo</h3>
               <ChipSelector options={T.REDES_APOYO} selected={vulnerabilidad.redes_apoyo as string[] || []} onChange={v => setVulnerabilidad({...vulnerabilidad, redes_apoyo: v})} />
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Características de la Vivienda</h3>
               <div className="input-group">
@@ -784,11 +735,9 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* Step 5: Cuidador */}
         {step === 5 && (
           <div className="animate-slide-up">
             <h2 className={styles.stepTitle}>Información del Cuidador e Interacción</h2>
-
             <div className="form-section">
               <h3 className="form-section-title">Perfil del Cuidador</h3>
               <div className="form-row">
@@ -805,7 +754,6 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 <div className="input-group"><label>Actividad Principal</label><input className="input-field" value={cuidador.actividad_principal || ''} onChange={e => setCuidador({...cuidador, actividad_principal: e.target.value})} /></div>
               </div>
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Tiempo e Interacción</h3>
               <div className="form-row">
@@ -819,12 +767,10 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 </div>
               )}
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Actividades (últimos 3 días)</h3>
               <ChipSelector options={T.ESTIMULOS_3_DIAS} selected={cuidador.estimulos_3_dias as string[] || []} onChange={v => setCuidador({...cuidador, estimulos_3_dias: v})} />
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Reconocimiento</h3>
               <ChipSelector options={T.RECONOCIMIENTOS} selected={cuidador.reconocimiento as string[] || []} onChange={v => setCuidador({...cuidador, reconocimiento: v})} />
@@ -832,37 +778,30 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* Step 6: Análisis Social */}
         {step === 6 && (
           <div className="animate-slide-up">
             <h2 className={styles.stepTitle}>Análisis Social y Conclusiones</h2>
-
             <div className="form-section">
               <h3 className="form-section-title">Metodología e Instrumentos Utilizados</h3>
-              
               {(() => {
                 let items: { instrumento: string, descripcion: string }[] = [];
                 try {
                   const parsed = JSON.parse(analisis.metodologia_instrumentos || '[]');
                   if (Array.isArray(parsed)) items = parsed;
                 } catch {}
-
                 const updateRow = (index: number, field: 'instrumento' | 'descripcion', value: string) => {
                   const newItems = [...items];
                   newItems[index][field] = value;
                   setAnalisis({ ...analisis, metodologia_instrumentos: JSON.stringify(newItems) });
                 };
-
                 const removeRow = (index: number) => {
                   const newItems = items.filter((_, i) => i !== index);
                   setAnalisis({ ...analisis, metodologia_instrumentos: JSON.stringify(newItems) });
                 };
-
                 const addRow = () => {
                   const newItems = [...items, { instrumento: '', descripcion: '' }];
                   setAnalisis({ ...analisis, metodologia_instrumentos: JSON.stringify(newItems) });
                 };
-
                 return (
                   <div>
                     {items.length > 0 && (
@@ -884,38 +823,30 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                                 <textarea className="input-field" style={{ minHeight: '80px', borderRadius: '0' }} placeholder="Descripción..." value={item.descripcion} onChange={e => updateRow(i, 'descripcion', e.target.value)} />
                               </td>
                               <td style={{ textAlign: 'center' }}>
-                                <button type="button" onClick={() => removeRow(i)} className="btn btn-tertiary" style={{ color: 'var(--error)' }}>
-                                  ✕
-                                </button>
+                                <button type="button" onClick={() => removeRow(i)} className="btn btn-tertiary" style={{ color: 'var(--error)' }}>✕</button>
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     )}
-                    <button type="button" onClick={addRow} className="btn btn-secondary">
-                      + Agregar Instrumento
-                    </button>
+                    <button type="button" onClick={addRow} className="btn btn-secondary">+ Agregar Instrumento</button>
                   </div>
                 );
               })()}
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Manifestaciones y Percepciones del NNA</h3>
               <textarea className="input-field" rows={5} value={analisis.manifestaciones_nna || ''} onChange={e => setAnalisis({...analisis, manifestaciones_nna: e.target.value})} placeholder="Describa las manifestaciones y percepciones observadas..." />
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Matriz de Vulneración de Derechos</h3>
               <textarea className="input-field" rows={5} value={analisis.matriz_vulneracion_derechos || ''} onChange={e => setAnalisis({...analisis, matriz_vulneracion_derechos: e.target.value})} placeholder="Detalle la matriz de vulneración de derechos..." />
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Factores de Riesgo y Generatividad</h3>
               <textarea className="input-field" rows={5} value={analisis.factores_riesgo_generatividad || ''} onChange={e => setAnalisis({...analisis, factores_riesgo_generatividad: e.target.value})} placeholder="Identifique factores de riesgo y generatividad..." />
             </div>
-
             <div className="form-section">
               <h3 className="form-section-title">Análisis Social y Recomendaciones</h3>
               <textarea className="input-field" rows={6} value={analisis.analisis_recomendaciones || ''} onChange={e => setAnalisis({...analisis, analisis_recomendaciones: e.target.value})} placeholder="Análisis social y recomendaciones técnicas al despacho..." />
@@ -923,7 +854,75 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* Navigation */}
+        {step === 7 && (
+          <div className="animate-slide-up">
+            <h2 className={styles.stepTitle}>Anexos Fotográficos</h2>
+            <div className="form-section">
+              <h3 className="form-section-title">Evidencia Visual</h3>
+              <p style={{ marginBottom: '1rem', color: 'var(--on-surface-variant)' }}>Sube aquí fotografías del entorno familiar, estado de la vivienda, o cualquier evidencia pertinente al caso. Serán añadidas al reporte final.</p>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label className="btn btn-secondary" style={{ cursor: 'pointer', display: 'inline-flex' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Subir Fotografías (PNG, JPG)
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    multiple 
+                    style={{ display: 'none' }}
+                    onChange={async (e) => {
+                      const files = e.target.files;
+                      if (!files || files.length === 0) return;
+                      setSaving(true);
+                      const newAnexos = [...(entrevista.anexos_fotograficos || [])];
+                      try {
+                        for (let i = 0; i < files.length; i++) {
+                          const file = files[i];
+                          const fileExt = file.name.split('.').pop();
+                          const fileName = `${id}/${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                          const { data, error } = await supabase.storage.from('anexos').upload(fileName, file);
+                          if (error) {
+                            alert(`Error subiendo foto: ${formatSupabaseError(error)}`);
+                            continue;
+                          }
+                          const { data: { publicUrl } } = supabase.storage.from('anexos').getPublicUrl(data.path);
+                          newAnexos.push(publicUrl);
+                        }
+                        setEntrevista({ ...entrevista, anexos_fotograficos: newAnexos });
+                        alert('Fotos subidas con éxito. (Recuerda "Guardar Progreso")');
+                      } catch (err: any) {
+                        alert('Error fatal subiendo: ' + err.message);
+                      }
+                      setSaving(false);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                {(entrevista.anexos_fotograficos || []).map((url, idx) => (
+                  <div key={idx} style={{ position: 'relative', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--outline-variant)' }}>
+                    <img src={url} alt={`Anexo ${idx + 1}`} style={{ width: '100%', height: '150px', objectFit: 'cover', display: 'block' }} />
+                    <button 
+                      className="btn btn-danger" 
+                      style={{ position: 'absolute', top: '8px', right: '8px', padding: '0.2rem 0.5rem', fontSize: '0.9rem' }}
+                      onClick={() => {
+                        if (!confirm('¿Eliminar esta foto del reporte?')) return;
+                        const filtered = (entrevista.anexos_fotograficos || []).filter((_, i) => i !== idx);
+                        setEntrevista({ ...entrevista, anexos_fotograficos: filtered });
+                      }}
+                    >✕</button>
+                  </div>
+                ))}
+                {(!entrevista.anexos_fotograficos || entrevista.anexos_fotograficos.length === 0) && (
+                  <div style={{ gridColumn: '1 / -1', padding: '2rem', textAlign: 'center', background: 'var(--surface-container-low)', borderRadius: 'var(--radius-md)', color: 'var(--outline)' }}>
+                    No hay fotos adjuntas a este caso.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className={styles.navButtons}>
           {step > 0 && (
             <button className="btn btn-secondary" onClick={async () => { await saveCurrentStep(); setStep(step - 1); }} disabled={saving}>
