@@ -10,7 +10,7 @@ export interface Entrevista {
   seccion: string;
   estado: 'borrador' | 'completado';
   genograma_data?: any;
-  anexos_fotograficos?: string[];
+  anexos_fotograficos?: any[];
   created_at?: string;
   updated_at?: string;
 }

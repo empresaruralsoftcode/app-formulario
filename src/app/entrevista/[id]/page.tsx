@@ -968,7 +968,7 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                             continue;
                           }
                           const { data: { publicUrl } } = supabase.storage.from('anexos').getPublicUrl(data.path);
-                          newAnexos.push(publicUrl);
+                          newAnexos.push({ url: publicUrl, descripcion: '' });
                         }
                         setEntrevista({ ...entrevista, anexos_fotograficos: newAnexos });
                         alert('Fotos subidas con éxito. (Recuerda "Guardar Progreso")');
@@ -982,20 +982,42 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 </label>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                {(entrevista.anexos_fotograficos || []).map((url, idx) => (
-                  <div key={idx} style={{ position: 'relative', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--outline-variant)' }}>
-                    <img src={url} alt={`Anexo ${idx + 1}`} style={{ width: '100%', height: '150px', objectFit: 'cover', display: 'block' }} />
-                    <button 
-                      className="btn btn-danger" 
-                      style={{ position: 'absolute', top: '8px', right: '8px', padding: '0.2rem 0.5rem', fontSize: '0.9rem' }}
-                      onClick={() => {
-                        if (!confirm('¿Eliminar esta foto del reporte?')) return;
-                        const filtered = (entrevista.anexos_fotograficos || []).filter((_, i) => i !== idx);
-                        setEntrevista({ ...entrevista, anexos_fotograficos: filtered });
+                {(entrevista.anexos_fotograficos || []).map((anexo, idx) => {
+                  const url = typeof anexo === 'string' ? anexo : anexo?.url;
+                  const desc = typeof anexo === 'string' ? '' : (anexo?.descripcion || '');
+                  if (!url) return null;
+                  
+                  return (
+                  <div key={idx} style={{ position: 'relative', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--outline-variant)', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ position: 'relative' }}>
+                      <img src={url} alt={`Anexo ${idx + 1}`} style={{ width: '100%', height: '150px', objectFit: 'cover', display: 'block' }} />
+                      <button 
+                        className="btn btn-danger" 
+                        style={{ position: 'absolute', top: '8px', right: '8px', padding: '0.2rem 0.5rem', fontSize: '0.9rem', width: 'auto' }}
+                        onClick={() => {
+                          if (!confirm('¿Eliminar esta foto del reporte?')) return;
+                          const filtered = (entrevista.anexos_fotograficos || []).filter((_, i) => i !== idx);
+                          setEntrevista({ ...entrevista, anexos_fotograficos: filtered });
+                        }}
+                      >✕</button>
+                    </div>
+                    <textarea 
+                      placeholder="Añadir descripción de esta fotografía..."
+                      value={desc}
+                      onChange={(e) => {
+                        const copy = [...(entrevista.anexos_fotograficos || [])];
+                        if (typeof copy[idx] === 'string') { 
+                          copy[idx] = { url: copy[idx], descripcion: e.target.value }; 
+                        } else { 
+                          copy[idx] = { ...copy[idx], descripcion: e.target.value }; 
+                        }
+                        setEntrevista({ ...entrevista, anexos_fotograficos: copy });
                       }}
-                    >✕</button>
+                      style={{ padding: '8px', border: 'none', borderTop: '1px solid var(--outline-variant)', fontSize: '0.85rem', resize: 'none', outline: 'none', fontFamily: 'inherit' }}
+                      rows={3}
+                    />
                   </div>
-                ))}
+                )})}
                 {(!entrevista.anexos_fotograficos || entrevista.anexos_fotograficos.length === 0) && (
                   <div style={{ gridColumn: '1 / -1', padding: '2rem', textAlign: 'center', background: 'var(--surface-container-low)', borderRadius: 'var(--radius-md)', color: 'var(--outline)' }}>
                     No hay fotos adjuntas a este caso.

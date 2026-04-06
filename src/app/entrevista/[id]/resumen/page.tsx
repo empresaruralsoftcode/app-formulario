@@ -352,12 +352,18 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
           <section className={styles.section} style={{ pageBreakInside: 'avoid' }}>
             <h3 className={styles.sectionTitle}>8. Anexos Fotográficos</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-              {entrevista.anexos_fotograficos.map((url, idx) => (
-                <div key={idx} style={{ textAlign: 'center' }}>
-                  <img src={url} alt={`Anexo fotográfico ${idx + 1}`} style={{ width: '100%', maxHeight: '350px', objectFit: 'contain', borderRadius: '8px', border: '1px solid var(--outline-variant)' }} />
-                  <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--on-surface-variant)' }}>Anexo {idx + 1}</p>
-                </div>
-              ))}
+              {entrevista.anexos_fotograficos.map((anexo, idx) => {
+                const url = typeof anexo === 'string' ? anexo : anexo?.url;
+                const desc = typeof anexo === 'string' ? '' : (anexo?.descripcion || '');
+                if (!url) return null;
+                return (
+                  <div key={idx} style={{ textAlign: 'center' }}>
+                    <img src={url} alt={`Anexo fotográfico ${idx + 1}`} style={{ width: '100%', maxHeight: '350px', objectFit: 'contain', borderRadius: '8px', border: '1px solid var(--outline-variant)' }} />
+                    <p style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>Anexo {idx + 1}</p>
+                    {desc && <p style={{ marginTop: '0.25rem', fontSize: '0.9rem', color: 'var(--on-surface-variant)', fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>{desc}</p>}
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}
