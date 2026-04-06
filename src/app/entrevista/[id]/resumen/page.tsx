@@ -35,6 +35,7 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
   const [vulnerabilidad, setVulnerabilidad] = useState<Partial<T.VulnerabilidadEntorno>>({});
   const [cuidador, setCuidador] = useState<Partial<T.InformacionCuidador>>({});
   const [analisis, setAnalisis] = useState<Partial<T.AnalisisSocial>>({});
+  const [tituloInforme, setTituloInforme] = useState('INFORME SOCIAL INICIAL PARA LA VERIFICACIÓN DE DERECHOS EN SITUACIÓN DE ABUSO SEXUAL- (ABS)');
 
   useEffect(() => {
     loadData();
@@ -104,23 +105,55 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
 
       {/* Printable Document */}
       <div className={styles.document}>
-        <header className={styles.header}>
-          <div className={styles.headerTitle}>
-            <div className={styles.govShield}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M8 11h8"/><path d="M12 7v8"/></svg>
-            </div>
-            <div>
-              <h1>Comisaría de Familia</h1>
-              <h2 className={styles.subtitle}>Sistema de Gestión de Entrevistas de Trabajo Social</h2>
-              <p className={styles.formTitle}>REGISTRO DE ENTREVISTA SOCIAL</p>
-            </div>
+        {/* Editable Header Section */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', border: '1.5px dashed var(--outline-variant)', minHeight: '120px', marginBottom: '1.5rem', fontFamily: 'Arial, sans-serif' }}>
+          {/* Left Block: Logos */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', padding: '10px', borderRight: '1.5px dashed var(--outline-variant)' }}>
+             <img src="/escudo.png" alt="Escudo Municipio de Morales" style={{ height: '80px', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+             <img src="/logo-pdet.png" alt="Logo PDET" style={{ height: '80px', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           </div>
-          <div className={styles.metaData}>
-            <p><strong>Número de Radicado:</strong> {id.slice(0, 8).toUpperCase()}</p>
-            <p><strong>Fecha de Emisión:</strong> {entrevista.fecha_diligenciamiento}</p>
-            <p><span className={`badge ${entrevista.estado === 'completado' ? 'badge-completed' : 'badge-draft'}`}>{entrevista.estado?.toUpperCase()}</span></p>
+          
+          {/* Center Block: Title */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px', textAlign: 'center' }}>
+            <h4 style={{ margin: 0, fontWeight: 500, color: '#333', fontSize: '1rem', lineHeight: '1.4' }}>ALCALDÍA MUNICIPAL<br/>NIT: 891500982-6</h4>
+            <h2 style={{ color: '#2e7d32', margin: '15px 0 0 0', textTransform: 'uppercase', fontSize: '1.5rem', fontWeight: 800 }}>INFORME TRABAJO SOCIAL</h2>
           </div>
-        </header>
+          
+          {/* Right Block: Metadata */}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px', padding: '10px 15px', borderLeft: '1.5px dashed var(--outline-variant)', fontSize: '0.85rem', color: '#555' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Fecha:</span> <span>junio de 2024</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Versión:</span> <span>11</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Página:</span> <span>1 de 13</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Cód:</span> <span>F-PM-096</span></div>
+          </div>
+        </div>
+
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <textarea 
+            className="print-textarea"
+            value={tituloInforme}
+            onChange={(e) => setTituloInforme(e.target.value)}
+            style={{ 
+              width: '100%', 
+              textAlign: 'center', 
+              fontSize: '1.25rem', 
+              fontWeight: 'bold', 
+              border: '1px solid transparent', 
+              resize: 'none', 
+              outline: 'none', 
+              overflow: 'hidden', 
+              minHeight: '40px',
+              fontFamily: 'inherit',
+              textTransform: 'uppercase'
+            }}
+            onFocus={(e) => e.target.style.border = '1px dashed #ccc'}
+            onBlur={(e) => e.target.style.border = '1px solid transparent'}
+            onInput={(e) => {
+              e.currentTarget.style.height = 'auto';
+              e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+            }}
+          />
+        </div>
 
         <section className={styles.section}>
           <h3 className={styles.sectionTitle}>1. Información de Control</h3>
