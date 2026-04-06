@@ -171,8 +171,10 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
                   <th>Nombre</th>
                   <th>Parentesco</th>
                   <th>Documento</th>
-                  <th>Edad/Nacimiento</th>
+                  <th>Edad/Nax</th>
                   <th>Actividad</th>
+                  <th>Est. Civil</th>
+                  <th>Contacto</th>
                 </tr>
               </thead>
               <tbody>
@@ -183,6 +185,8 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
                     <td>{ig.numero_documento}</td>
                     <td>{ig.fecha_nacimiento} {calculateAge(ig.fecha_nacimiento) ? `(${calculateAge(ig.fecha_nacimiento)} años)` : ''}</td>
                     <td>{ig.actividad_principal}</td>
+                    <td>{ig.estado_civil}</td>
+                    <td>{ig.contacto}</td>
                   </tr>
                 ))}
               </tbody>

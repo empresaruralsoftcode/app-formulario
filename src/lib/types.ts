@@ -85,6 +85,8 @@ export interface IntegranteHogar {
   nivel_escolaridad: string;
   actividad_principal: string;
   ingresos: number | null;
+  estado_civil?: string;
+  contacto?: string;
   orden: number;
 }
 

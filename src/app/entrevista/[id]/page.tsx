@@ -671,6 +671,10 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                     <div className="input-group"><label>Actividad Principal</label><input className="input-field" value={ig.actividad_principal || ''} onChange={e => updateIntegrante(i, 'actividad_principal', e.target.value)} /></div>
                     <div className="input-group"><label>Ingresos</label><input type="number" className="input-field" value={ig.ingresos ?? ''} onChange={e => updateIntegrante(i, 'ingresos', e.target.value ? Number(e.target.value) : null)} /></div>
                   </div>
+                  <div className="form-row">
+                    <div className="input-group"><label>Estado Civil</label><input className="input-field" value={ig.estado_civil || ''} onChange={e => updateIntegrante(i, 'estado_civil', e.target.value)} placeholder="Ej: Soltero(a), Casado(a)" /></div>
+                    <div className="input-group"><label>Contacto (Número de celular)</label><input className="input-field" type="tel" value={ig.contacto || ''} onChange={e => updateIntegrante(i, 'contacto', e.target.value)} placeholder="Ej: 3001234567" /></div>
+                  </div>
                 </div>
               ))}
               <button type="button" className="btn btn-secondary" onClick={addIntegrante}>
