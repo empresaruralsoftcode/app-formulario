@@ -20,7 +20,9 @@
   box-shadow: var(--shadow-2);
   padding: var(--space-12);
   color: var(--on-surface);
-  font-family: var(--font-body);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12pt;
+  line-height: 1.5;
 }
 
 .header {
@@ -96,8 +98,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
-  font-size: 0.9375rem;
-  line-height: var(--line-height-body);
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .grid2 div {
@@ -115,7 +117,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9375rem;
+  font-size: inherit;
 }
 
 .table th, .table td {
