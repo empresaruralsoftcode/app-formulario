@@ -189,6 +189,12 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
       if (step >= 2) {
         const payload = { ...condiciones, entrevista_id: id };
         delete (payload as any).created_at;
+        
+        // Convierto strings vacíos en null para evitar violaciones de CHECK constraints en BD
+        (Object.keys(payload) as (keyof typeof payload)[]).forEach(k => {
+          if (payload[k] === '') (payload[k] as any) = null;
+        });
+
         const { data: condData, error: condErr } = await supabase
           .from('condiciones_habitacionales')
           .upsert(payload, { onConflict: 'entrevista_id' })
