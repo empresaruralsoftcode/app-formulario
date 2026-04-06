@@ -2,9 +2,12 @@
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import * as T from '@/lib/types';
 import styles from './entrevista.module.css';
+
+const GenogramaEditor = dynamic(() => import('@/components/GenogramaEditor'), { ssr: false });
 
 const STEPS = [
   { id: 0, label: 'Información General', icon: '📋' },
@@ -761,6 +764,19 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
               <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
                 <label>¿Quién Corrige?</label>
                 <input className="input-field" value={dinamica.quien_corrige || ''} onChange={e => setDinamica({...dinamica, quien_corrige: e.target.value})} placeholder="Nombre o parentesco..." />
+              </div>
+            </div>
+            <div className="form-section">
+              <h3 className="form-section-title">Genograma Familiar</h3>
+              <p style={{ color: 'var(--on-surface-variant)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                Utilice esta herramienta interactiva para construir el genograma familiar. Añada hombres (cuadrados) o mujeres (círculos), haga clic en ellos para editar su nombre, enfermedades u ocupación, y trace las relaciones conectando sus puntos. Ajuste los estilos de línea seleccionándola.
+              </p>
+              <div style={{ height: '600px', borderRadius: '8px', border: '1px solid var(--outline-variant)', overflow: 'hidden' }}>
+                <GenogramaEditor 
+                  initialNodes={entrevista.genograma_data?.nodes || []}
+                  initialEdges={entrevista.genograma_data?.edges || []}
+                  onChange={(nodes, edges) => setEntrevista(prev => ({ ...prev, genograma_data: { nodes, edges } }))}
+                />
               </div>
             </div>
           </div>

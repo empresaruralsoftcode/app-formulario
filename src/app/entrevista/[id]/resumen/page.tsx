@@ -2,9 +2,12 @@
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import * as T from '@/lib/types';
 import styles from './resumen.module.css';
+
+const GenogramaEditor = dynamic(() => import('@/components/GenogramaEditor'), { ssr: false });
 
 function calculateAge(birthDate?: string): number | null {
   if (!birthDate) return null;
@@ -201,6 +204,19 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
             <div style={{ gridColumn: '1 / -1' }}><strong>Actividades Familiares:</strong> {(dinamica.actividades_familiares as string[] ?? []).join(', ')}</div>
             <div style={{ gridColumn: '1 / -1' }}><strong>Métodos de Corrección:</strong> {(dinamica.metodos_correccion as string[] ?? []).join(', ')} (Aplica: {dinamica.quien_corrige})</div>
           </div>
+          
+          {entrevista.genograma_data && (entrevista.genograma_data.nodes?.length > 0) && (
+            <div style={{ marginTop: 'var(--space-6)', pageBreakInside: 'avoid' }}>
+              <h4 style={{ marginBottom: 'var(--space-3)', color: 'var(--on-surface-variant)' }}>Genograma</h4>
+              <div style={{ height: '400px', border: '1px solid var(--outline-variant)', borderRadius: '8px', overflow: 'hidden' }}>
+                <GenogramaEditor 
+                  initialNodes={entrevista.genograma_data.nodes}
+                  initialEdges={entrevista.genograma_data.edges}
+                  readOnly={true}
+                />
+              </div>
+            </div>
+          )}
         </section>
 
         <section className={styles.section}>
