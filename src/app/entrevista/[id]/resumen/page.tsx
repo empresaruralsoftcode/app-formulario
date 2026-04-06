@@ -127,7 +127,7 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
                   <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px', padding: '10px 15px', borderLeft: '1.5px dashed var(--outline-variant)', fontSize: '0.85rem', color: '#555' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Fecha:</span> <span>junio de 2024</span></div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Versión:</span> <span>11</span></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Página:</span> <span className="page-number-placeholder">____ de ____</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Página:</span> <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; de &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Cód:</span> <span>F-PM-096</span></div>
                   </div>
                 </div>
