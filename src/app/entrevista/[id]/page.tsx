@@ -94,7 +94,7 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
     estimulos_3_dias: [], reconocimiento: [], nna_queda_solo: null,
   });
   const [analisis, setAnalisis] = useState<Partial<T.AnalisisSocial>>({
-    manifestaciones_nna: '', matriz_vulneracion_derechos: '', factores_riesgo_generatividad: '', analisis_recomendaciones: '',
+    metodologia_instrumentos: '', manifestaciones_nna: '', matriz_vulneracion_derechos: '', factores_riesgo_generatividad: '', analisis_recomendaciones: '',
   });
 
   useEffect(() => {
@@ -836,6 +836,11 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
         {step === 6 && (
           <div className="animate-slide-up">
             <h2 className={styles.stepTitle}>Análisis Social y Conclusiones</h2>
+
+            <div className="form-section">
+              <h3 className="form-section-title">Metodología e Instrumentos Utilizados</h3>
+              <textarea className="input-field" rows={4} value={analisis.metodologia_instrumentos || ''} onChange={e => setAnalisis({...analisis, metodologia_instrumentos: e.target.value})} placeholder="Describa la metodología e instrumentos utilizados en la entrevista..." />
+            </div>
 
             <div className="form-section">
               <h3 className="form-section-title">Manifestaciones y Percepciones del NNA</h3>

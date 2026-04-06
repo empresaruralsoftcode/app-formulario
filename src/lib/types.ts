@@ -124,6 +124,7 @@ export interface InformacionCuidador {
 export interface AnalisisSocial {
   id?: string;
   entrevista_id: string;
+  metodologia_instrumentos: string;
   manifestaciones_nna: string;
   matriz_vulneracion_derechos: string;
   factores_riesgo_generatividad: string;
