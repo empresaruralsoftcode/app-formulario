@@ -412,19 +412,46 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
                     </div>
 
                     {/* Right Block: Socials */}
-                    <div style={{ width: '35%', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '50px' }}>
-                      <strong style={{ color: '#888', fontSize: '13pt', marginBottom: '10px' }}>AlcaldíaMoralesCauca</strong>
-                      <div style={{ display: 'flex', gap: '12px' }}>
-                        {[
-                          <svg key="fb" width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>,
-                          <svg key="ig" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>,
-                          <svg key="x" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M 5 5 L 19 19 M 19 5 L 5 19" stroke="white" strokeWidth="3" strokeLinecap="round" /></svg>,
-                          <svg key="yt" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="3" ry="3"/><polygon points="10 9 15 12 10 15 10 9"/><circle cx="18.5" cy="16.5" r="1.5" fill="white" stroke="none"/></svg>
-                        ].map((icon, i) => (
-                          <div key={i} style={{ width: '42px', height: '42px', backgroundColor: '#a3c68c', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                            {icon}
-                          </div>
-                        ))}
+                    <div style={{ width: '35%', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '40px' }}>
+                      <strong style={{ color: '#888', fontSize: '13pt', marginBottom: '8px' }}>AlcaldíaMoralesCauca</strong>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        
+                        {/* Facebook */}
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                          <circle cx="20" cy="20" r="18" fill="#a3c68c" />
+                          <g transform="translate(8, 8)">
+                            <path d="M16 2h-3a5 5 0 0 0-5 5v3H5v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" fill="white"/>
+                          </g>
+                        </svg>
+
+                        {/* Instagram */}
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                          <circle cx="20" cy="20" r="18" fill="#a3c68c" />
+                          <g transform="translate(8, 8)">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                          </g>
+                        </svg>
+
+                        {/* X (Twitter) */}
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                          <circle cx="20" cy="20" r="18" fill="#a3c68c" />
+                          <g transform="translate(8, 8)">
+                            <path d="M 5 5 L 19 19 M 19 5 L 5 19" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+                          </g>
+                        </svg>
+
+                        {/* YouTube */}
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                          <circle cx="20" cy="20" r="18" fill="#a3c68c" />
+                          <g transform="translate(8, 8)">
+                            <rect x="2" y="5" width="20" height="14" rx="3" ry="3" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <polygon points="10 9 15 12 10 15 10 9" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <circle cx="18.5" cy="16.5" r="1.5" fill="white" stroke="none"/>
+                          </g>
+                        </svg>
+                        
                       </div>
                     </div>
                   </div>
