@@ -122,9 +122,24 @@ const GenogramEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, 
   return <BaseEdge path={edgePath} style={{ strokeWidth: 2, stroke: '#333', ...style }} />;
 };
 
+const UnionNode = ({ selected }: any) => {
+  return (
+    <div style={{ position: 'relative', width: 20, height: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{
+        width: 10, height: 10, borderRadius: '50%', background: selected ? '#ff4081' : '#333'
+      }} />
+      <Handle type="source" position={Position.Top} id="top" style={{ background: '#555', top: -5 }} />
+      <Handle type="source" position={Position.Right} id="right" style={{ background: '#555', right: -5 }} />
+      <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#555', bottom: -5 }} />
+      <Handle type="source" position={Position.Left} id="left" style={{ background: '#555', left: -5 }} />
+    </div>
+  );
+};
+
 const nodeTypes = {
   male: MaleNode,
-  female: FemaleNode
+  female: FemaleNode,
+  union: UnionNode
 };
 
 const edgeTypes = {
@@ -162,12 +177,12 @@ export default function GenogramaEditor({ initialNodes = [], initialEdges = [], 
     }
   };
 
-  const addNode = (gender: 'male' | 'female') => {
+  const addNode = (gender: 'male' | 'female' | 'union') => {
     const newNode: Node = {
       id: `node_${Date.now()}`,
       type: gender,
       position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
-      data: {
+      data: gender === 'union' ? { label: '' } : {
         label: `Persona ${nodes.length + 1}`,
         age: '', health: '', education: '', isMain: false, deceased: false
       }
@@ -209,6 +224,7 @@ export default function GenogramaEditor({ initialNodes = [], initialEdges = [], 
         <div style={{ padding: '10px', background: '#f5f5f5', borderBottom: '1px solid #ccc', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           <button type="button" className="btn btn-secondary" onClick={() => addNode('male')}>+ Hombre (■)</button>
           <button type="button" className="btn btn-secondary" onClick={() => addNode('female')}>+ Mujer (●)</button>
+          <button type="button" className="btn btn-secondary" onClick={() => addNode('union')} style={{ borderStyle: 'dashed' }}>+ Unión (Punto)</button>
           <button type="button" className="btn btn-tertiary" onClick={() => {
              if (selectedNodeId) {
                setNodes(ns => ns.filter(n => n.id !== selectedNodeId));
