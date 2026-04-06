@@ -1,0 +1,245 @@
+.layout {
+  min-height: 100vh;
+  background-color: var(--surface-container-lowest);
+  padding: var(--space-6) 0;
+}
+
+.topActions {
+  max-width: 900px;
+  margin: 0 auto var(--space-6) auto;
+  display: flex;
+  gap: var(--space-4);
+  padding: 0 var(--space-6);
+}
+
+.document {
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  padding: var(--space-12);
+  color: var(--on-surface);
+  font-family: var(--font-body);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.govShield {
+  color: var(--primary);
+  opacity: 0.8;
+}
+
+.header h1 {
+  font-family: var(--font-headline);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+  margin: 0;
+}
+
+.formTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--on-surface);
+  margin: var(--space-2) 0 0 0;
+  letter-spacing: 1px;
+}
+
+.metaData {
+  text-align: right;
+  font-size: 0.875rem;
+}
+
+.metaData p {
+  margin: 0 0 var(--space-1) 0;
+}
+
+.section {
+  margin-bottom: var(--space-8);
+}
+
+.sectionTitle {
+  font-family: var(--font-headline);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-container);
+  background: var(--surface-container-low);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-4);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  font-size: 0.9375rem;
+  line-height: var(--line-height-body);
+}
+
+.grid2 div {
+  background: rgba(246, 247, 249, 0.4);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+}
+
+.grid2 strong {
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  margin-right: var(--space-1);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.table th, .table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.table th {
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  background: var(--surface-container-low);
+}
+
+.emptyText {
+  color: var(--on-surface-variant);
+  font-style: italic;
+}
+
+.textBlock {
+  margin-bottom: var(--space-6);
+}
+
+.textBlock h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2) 0;
+  color: var(--on-surface);
+}
+
+.textBlock p {
+  margin: 0;
+  padding: var(--space-4);
+  background: var(--surface-container-low);
+  border-radius: var(--radius-md);
+  line-height: var(--line-height-body);
+  white-space: pre-wrap;
+}
+
+.signatures {
+  margin-top: var(--space-16);
+  display: flex;
+  justify-content: flex-start;
+}
+
+.signatureLine {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  border-top: 1px solid var(--on-surface-variant);
+  padding-top: var(--space-2);
+}
+
+.signatureLine span {
+  font-size: 0.875rem;
+  color: var(--on-surface-variant);
+  margin-bottom: var(--space-2);
+}
+
+.signatureLine strong {
+  font-size: 1rem;
+}
+
+.signatureLine small {
+  font-size: 0.75rem;
+  color: var(--on-surface-variant);
+}
+
+/* ── Print Media Query ── */
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: letter;
+  }
+  
+  .layout {
+    background-color: transparent;
+    padding: 0;
+  }
+  
+  .topActions {
+    display: none;
+  }
+  
+  .document {
+    box-shadow: none;
+    padding: 0;
+    max-width: none;
+  }
+
+  .govShield {
+    display: block;
+    color: #000;
+  }
+  
+  .header h1, .formTitle {
+    color: #000;
+  }
+  
+  .grid2 div {
+    background: transparent;
+    padding: 0;
+    margin-bottom: var(--space-2);
+  }
+  
+  .textBlock p {
+    background: transparent;
+    padding: 0;
+    border: none;
+  }
+
+  .sectionTitle {
+    background: transparent;
+    border-bottom: 1px solid var(--primary-container);
+    padding: var(--space-1) 0;
+    border-radius: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+  .topActions {
+    flex-wrap: wrap;
+  }
+}

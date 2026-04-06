@@ -1,0 +1,194 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 280px;
+  background: var(--surface-container-low);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebarTop {
+  margin-bottom: var(--space-4);
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: transparent;
+  border: none;
+  color: var(--on-surface-variant);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  padding: var(--space-2) 0;
+  margin-bottom: var(--space-4);
+  transition: color 0.2s ease;
+}
+
+.backBtn:hover {
+  color: var(--primary);
+}
+
+.sidebarHeading {
+  font-family: var(--font-headline);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin-bottom: var(--space-4);
+}
+
+.stepperNav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.sidebarActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-6);
+}
+
+.savedLabel {
+  text-align: center;
+  color: #166534;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ── Main ── */
+.main {
+  flex: 1;
+  padding: var(--space-10) var(--space-12);
+  max-width: 900px;
+  overflow-y: auto;
+}
+
+.stepTitle {
+  font-family: var(--font-headline);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin-bottom: var(--space-8);
+}
+
+/* ── Integrante Card ── */
+.integranteCard {
+  background: var(--surface-container-low);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-4);
+  animation: fadeIn 0.3s ease;
+}
+
+.integranteHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+/* ── Navigation ── */
+.navButtons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-10);
+  padding-top: var(--space-6);
+  border-top: 1px solid rgba(195, 198, 209, 0.2);
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    position: relative;
+    height: auto;
+  }
+  .stepperNav {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .main {
+    padding: var(--space-6);
+  }
+}
+
+/* ── Completed Banner ── */
+.completedBanner {
+  background: var(--surface-container-high);
+  color: var(--on-surface);
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  margin-bottom: var(--space-10);
+  box-shadow: var(--shadow-2);
+  border: 1px solid var(--primary);
+  animation: slideIn 0.5s ease-out;
+}
+
+.bannerContent {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.bannerIcon {
+  width: 48px;
+  height: 48px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.bannerText h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.bannerText p {
+  margin: var(--space-1) 0 0 0;
+  font-size: 0.9375rem;
+  opacity: 0.9;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .completedBanner {
+    flex-direction: column;
+    text-align: center;
+  }
+  .bannerContent {
+    flex-direction: column;
+  }
+}

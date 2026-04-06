@@ -1,142 +1,164 @@
-.page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
+.container {
   display: flex;
+  min-height: 100vh;
+}
+
+.leftPanel {
   flex: 1;
-  flex-direction: column;
+  background: linear-gradient(135deg, var(--primary), var(--primary-container));
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
+  padding: var(--space-16);
+  position: relative;
+  overflow: hidden;
 }
 
-.main {
-  display: flex;
+.leftPanel::before {
+  content: '';
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(167, 200, 255, 0.15) 0%, transparent 70%);
+  top: -100px;
+  right: -100px;
+  border-radius: 50%;
+}
+
+.leftPanel::after {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(163, 216, 254, 0.1) 0%, transparent 70%);
+  bottom: -80px;
+  left: -80px;
+  border-radius: 50%;
+}
+
+.brandContent {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+  animation: fadeIn 0.6s ease forwards;
+}
+
+.logoMark {
+  margin-bottom: var(--space-8);
+}
+
+.brandTitle {
+  font-family: var(--font-headline);
+  font-size: 3rem;
+  font-weight: 800;
+  color: white;
+  line-height: 1.1;
+  margin-bottom: var(--space-4);
+}
+
+.brandSubtitle {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  margin-bottom: var(--space-8);
+}
+
+.decorLine {
+  width: 48px;
+  height: 3px;
+  background: var(--secondary-container);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-6);
+}
+
+.brandCaption {
+  font-size: 0.9375rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+}
+
+.rightPanel {
   flex: 1;
-  width: 100%;
-  max-width: 800px;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
-}
-
-.intro {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 24px;
-}
-
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
-}
-
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.ctas {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
-  font-size: 14px;
-}
-
-.ctas a {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
-  cursor: pointer;
-  width: fit-content;
-  font-weight: 500;
+  justify-content: center;
+  padding: var(--space-8);
+  background: var(--surface);
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
-  gap: 8px;
+.loginCard {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface-container-lowest);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-12);
+  box-shadow: var(--shadow-ambient);
+  animation: slideUp 0.5s ease forwards;
 }
 
-a.secondary {
-  border-color: var(--button-secondary-border);
+.loginHeader {
+  margin-bottom: var(--space-10);
 }
 
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
-  }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
+.loginHeader h2 {
+  font-family: var(--font-headline);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--on-surface);
+  margin-bottom: var(--space-2);
 }
 
-@media (max-width: 600px) {
-  .main {
-    padding: 48px 24px;
-  }
-
-  .intro {
-    gap: 16px;
-  }
-
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
-  }
+.loginHeader p {
+  color: var(--on-surface-variant);
+  font-size: 0.9375rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.loginBtn {
+  width: 100%;
+  justify-content: center;
+  padding: 0.875rem;
+  font-size: 0.9375rem;
+  margin-top: var(--space-2);
+}
+
+.btnSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.loginFooter {
+  text-align: center;
+  margin-top: var(--space-8);
+  font-size: 0.75rem;
+  color: var(--outline);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
   }
 
-  .page {
-    --background: #000;
-    --foreground: #000;
+  .leftPanel {
+    padding: var(--space-8);
+    min-height: auto;
+  }
 
-    --text-primary: #ededed;
-    --text-secondary: #999;
+  .brandTitle {
+    font-size: 2rem;
+  }
 
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
+  .loginCard {
+    padding: var(--space-8);
   }
 }
