@@ -24,10 +24,10 @@ import '@xyflow/react/dist/style.css';
 
 const renderHandles = () => (
   <>
-    <Handle type="source" position={Position.Top} id="top" style={{ background: '#555' }} />
-    <Handle type="source" position={Position.Right} id="right" style={{ background: '#555' }} />
-    <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#555' }} />
-    <Handle type="source" position={Position.Left} id="left" style={{ background: '#555' }} />
+    <Handle type="source" position={Position.Top} id="top" style={{ background: '#555', top: 10 }} />
+    <Handle type="source" position={Position.Right} id="right" style={{ background: '#555', right: 10 }} />
+    <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#555', bottom: 10 }} />
+    <Handle type="source" position={Position.Left} id="left" style={{ background: '#555', left: 10 }} />
   </>
 );
 
@@ -128,10 +128,10 @@ const UnionNode = ({ selected }: any) => {
       <div style={{
         width: 10, height: 10, borderRadius: '50%', background: selected ? '#ff4081' : '#333'
       }} />
-      <Handle type="source" position={Position.Top} id="top" style={{ background: '#555', top: -5 }} />
-      <Handle type="source" position={Position.Right} id="right" style={{ background: '#555', right: -5 }} />
-      <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#555', bottom: -5 }} />
-      <Handle type="source" position={Position.Left} id="left" style={{ background: '#555', left: -5 }} />
+      <Handle type="source" position={Position.Top} id="top" style={{ background: '#555', top: 5 }} />
+      <Handle type="source" position={Position.Right} id="right" style={{ background: '#555', right: 5 }} />
+      <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#555', bottom: 5 }} />
+      <Handle type="source" position={Position.Left} id="left" style={{ background: '#555', left: 5 }} />
     </div>
   );
 };
