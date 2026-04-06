@@ -167,7 +167,13 @@ export default function GenogramaEditor({ initialNodes = [], initialEdges = [], 
       const { toPng } = await import('html-to-image');
       const element = document.querySelector('.react-flow') as HTMLElement;
       if (element) {
+        element.classList.add('hide-handles');
+        
+        await new Promise(r => setTimeout(r, 100)); // allow css to apply
+        
         const dataUrl = await toPng(element, { backgroundColor: '#ffffff', pixelRatio: 2 });
+        
+        element.classList.remove('hide-handles');
         save(dataUrl);
         alert('Imagen capturada con éxito. Ahora se verá en el PDF.');
       }
@@ -218,7 +224,14 @@ export default function GenogramaEditor({ initialNodes = [], initialEdges = [], 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '600px', border: 'none', overflow: 'hidden' }}>
-      
+      <style dangerouslySetInnerHTML={{__html: `
+        .hide-handles .react-flow__handle { display: none !important; }
+        .hide-handles .react-flow__background { opacity: 0 !important; }
+        ${readOnly ? `
+          .react-flow__handle { display: none !important; }
+          .react-flow__background { opacity: 0 !important; }
+        ` : ''}
+      `}} />
       {/* TOOLBAR */}
       {!readOnly && (
         <div style={{ padding: '10px', background: '#f5f5f5', borderBottom: '1px solid #ccc', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
