@@ -224,6 +224,56 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
 
         <section className={styles.section}>
           <h3 className={styles.sectionTitle}>7. Análisis Social y Conclusiones</h3>
+
+          <div className={styles.textBlock}>
+            <h4>Metodología e Instrumentos Utilizados</h4>
+            {(() => {
+              let metoData: any = {};
+              try { metoData = JSON.parse(analisis.metodologia_instrumentos || '{}'); } catch {}
+              
+              if (!metoData.entrevista && !metoData.revision && !metoData.observacion && !metoData.analisis_socio) {
+                return <p>Sin información registrada.</p>;
+              }
+              
+              return (
+                <table className={styles.table} style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '30%' }}>Instrumentos aplicados</th>
+                      <th>Descripción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {metoData.entrevista && (
+                      <tr>
+                        <td style={{ verticalAlign: 'top' }}><strong>Entrevista semi-estructurada:</strong></td>
+                        <td>{metoData.entrevista}</td>
+                      </tr>
+                    )}
+                    {metoData.revision && (
+                      <tr>
+                        <td style={{ verticalAlign: 'top' }}><strong>Revisión Documental:</strong></td>
+                        <td>{metoData.revision}</td>
+                      </tr>
+                    )}
+                    {metoData.observacion && (
+                      <tr>
+                        <td style={{ verticalAlign: 'top' }}><strong>Observación directa:</strong></td>
+                        <td>{metoData.observacion}</td>
+                      </tr>
+                    )}
+                    {metoData.analisis_socio && (
+                      <tr>
+                        <td style={{ verticalAlign: 'top' }}><strong>Análisis sociofamiliar:</strong></td>
+                        <td>{metoData.analisis_socio}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              );
+            })()}
+          </div>
+
           <div className={styles.textBlock}>
             <h4>Manifestaciones del NNA</h4>
             <p>{analisis.manifestaciones_nna || 'Sin información registrada.'}</p>

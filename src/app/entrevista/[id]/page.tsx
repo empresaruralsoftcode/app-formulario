@@ -839,7 +839,63 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
 
             <div className="form-section">
               <h3 className="form-section-title">Metodología e Instrumentos Utilizados</h3>
-              <textarea className="input-field" rows={4} value={analisis.metodologia_instrumentos || ''} onChange={e => setAnalisis({...analisis, metodologia_instrumentos: e.target.value})} placeholder="Describa la metodología e instrumentos utilizados en la entrevista..." />
+              
+              {(() => {
+                let metoData: any = {};
+                try {
+                  metoData = JSON.parse(analisis.metodologia_instrumentos || '{}');
+                } catch {}
+                
+                const defaults = {
+                  entrevista: "Se aplicada de manera cuidadosa y acorde al enfoque diferencial y de protección, con el fin de obtener información relevante sobre el contexto familiar, social y emocional de la menor, así como la percepción de los cuidadores, evitando la revictimización.",
+                  revision: "Se realizó el análisis de los documentos disponibles en el expediente (informes institucionales, valoraciones previas, remisiones y registros), con el propósito de contextualizar el caso y contrastar la información recolectada.",
+                  observacion: "Permitió identificar dinámicas relacionales, conductas, expresiones emocionales y condiciones del entorno familiar, aportando elementos cualitativos para la valoración de posibles factores de riesgo y protección.",
+                  analisis_socio: "A partir de la integración de las técnicas anteriores, se realizó una valoración del entorno familiar y social de la menor, identificando factores de vulnerabilidad, redes de apoyo y condiciones que inciden en la garantía o vulneración de sus derechos."
+                };
+
+                const getVal = (key: keyof typeof defaults) => metoData[key] !== undefined ? metoData[key] : defaults[key];
+                
+                const updateVal = (key: keyof typeof defaults, val: string) => {
+                  const current = { 
+                    entrevista: getVal('entrevista'),
+                    revision: getVal('revision'),
+                    observacion: getVal('observacion'),
+                    analisis_socio: getVal('analisis_socio'),
+                    ...metoData, 
+                    [key]: val 
+                  };
+                  setAnalisis({ ...analisis, metodologia_instrumentos: JSON.stringify(current) });
+                };
+
+                return (
+                  <table className="data-table" style={{ marginTop: '0', width: '100%' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ width: '25%', fontSize: '0.875rem', color: 'var(--on-surface)' }}>Instrumentos aplicados</th>
+                        <th style={{ fontSize: '0.875rem', color: 'var(--on-surface)' }}>Descripción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style={{ fontWeight: 600, verticalAlign: 'top', background: 'var(--surface-container-low)' }}>Entrevista semi-estructurada:</td>
+                        <td style={{ padding: '0' }}><textarea className="input-field" style={{ minHeight: '80px', borderRadius: '0' }} value={getVal('entrevista')} onChange={e => updateVal('entrevista', e.target.value)} /></td>
+                      </tr>
+                      <tr>
+                        <td style={{ fontWeight: 600, verticalAlign: 'top', background: 'var(--surface-container-low)' }}>Revisión Documental:</td>
+                        <td style={{ padding: '0' }}><textarea className="input-field" style={{ minHeight: '80px', borderRadius: '0' }} value={getVal('revision')} onChange={e => updateVal('revision', e.target.value)} /></td>
+                      </tr>
+                      <tr>
+                        <td style={{ fontWeight: 600, verticalAlign: 'top', background: 'var(--surface-container-low)' }}>Observación directa:</td>
+                        <td style={{ padding: '0' }}><textarea className="input-field" style={{ minHeight: '80px', borderRadius: '0' }} value={getVal('observacion')} onChange={e => updateVal('observacion', e.target.value)} /></td>
+                      </tr>
+                      <tr>
+                        <td style={{ fontWeight: 600, verticalAlign: 'top', background: 'var(--surface-container-low)' }}>Análisis sociofamiliar:</td>
+                        <td style={{ padding: '0', borderRadius: '0 0 var(--radius-md) 0' }}><textarea className="input-field" style={{ minHeight: '80px', borderRadius: '0 0 var(--radius-md) 0' }} value={getVal('analisis_socio')} onChange={e => updateVal('analisis_socio', e.target.value)} /></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                );
+              })()}
             </div>
 
             <div className="form-section">
