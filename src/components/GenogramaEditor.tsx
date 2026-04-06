@@ -22,6 +22,15 @@ import '@xyflow/react/dist/style.css';
 
 // --- CUSTOM NODES ---
 
+const renderHandles = () => (
+  <>
+    <Handle type="source" position={Position.Top} id="top" style={{ background: '#555' }} />
+    <Handle type="source" position={Position.Right} id="right" style={{ background: '#555' }} />
+    <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#555' }} />
+    <Handle type="source" position={Position.Left} id="left" style={{ background: '#555' }} />
+  </>
+);
+
 const MaleNode = ({ data, selected }: any) => {
   return (
     <div style={{ position: 'relative', width: 60, height: 60, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -35,8 +44,7 @@ const MaleNode = ({ data, selected }: any) => {
           </svg>
         )}
       </div>
-      <Handle type="target" position={Position.Top} style={{ background: '#555' }} />
-      <Handle type="source" position={Position.Bottom} style={{ background: '#555' }} />
+      {renderHandles()}
       <div style={{ position: 'absolute', top: 62, fontSize: '10px', textAlign: 'center', width: 120, left: -30 }}>
         <strong>{data.label}</strong>
         {data.age && <div>{data.age} años</div>}
@@ -60,8 +68,7 @@ const FemaleNode = ({ data, selected }: any) => {
           </svg>
         )}
       </div>
-      <Handle type="target" position={Position.Top} style={{ background: '#555' }} />
-      <Handle type="source" position={Position.Bottom} style={{ background: '#555' }} />
+      {renderHandles()}
       <div style={{ position: 'absolute', top: 62, fontSize: '10px', textAlign: 'center', width: 120, left: -30 }}>
         <strong>{data.label}</strong>
         {data.age && <div>{data.age} años</div>}
@@ -217,6 +224,7 @@ export default function GenogramaEditor({ initialNodes = [], initialEdges = [], 
               setSelectedNodeId(params.nodes[0]?.id || null);
               setSelectedEdgeId(params.edges[0]?.id || null);
             }}
+            connectionMode={'loose' as any}
             fitView
           >
             <Controls />
@@ -231,19 +239,19 @@ export default function GenogramaEditor({ initialNodes = [], initialEdges = [], 
             
             {selectedNode && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-                <div><label>Nombre/Rol</label><input className="input-field" value={selectedNode.data.label} onChange={e => updateSelectedNode('label', e.target.value)} /></div>
-                <div><label>Edad</label><input type="number" className="input-field" value={selectedNode.data.age} onChange={e => updateSelectedNode('age', e.target.value)} /></div>
-                <div><label>Enfermedades/Salud</label><input className="input-field" placeholder="Ej: DB, ALC..." value={selectedNode.data.health} onChange={e => updateSelectedNode('health', e.target.value)} /></div>
-                <div><label>Educación/Extra</label><input className="input-field" value={selectedNode.data.education} onChange={e => updateSelectedNode('education', e.target.value)} /></div>
+                <div><label>Nombre/Rol</label><input className="input-field" value={selectedNode.data.label as string || ''} onChange={e => updateSelectedNode('label', e.target.value)} /></div>
+                <div><label>Edad</label><input type="number" className="input-field" value={selectedNode.data.age as string || ''} onChange={e => updateSelectedNode('age', e.target.value)} /></div>
+                <div><label>Enfermedades/Salud</label><input className="input-field" placeholder="Ej: DB, ALC..." value={selectedNode.data.health as string || ''} onChange={e => updateSelectedNode('health', e.target.value)} /></div>
+                <div><label>Educación/Extra</label><input className="input-field" value={selectedNode.data.education as string || ''} onChange={e => updateSelectedNode('education', e.target.value)} /></div>
                 <div>
                   <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: 10}}>
-                    <input type="checkbox" checked={selectedNode.data.isMain} onChange={e => updateSelectedNode('isMain', e.target.checked)} />
+                    <input type="checkbox" checked={selectedNode.data.isMain as boolean || false} onChange={e => updateSelectedNode('isMain', e.target.checked)} />
                     Consultante Principal
                   </label>
                 </div>
                 <div>
                   <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
-                    <input type="checkbox" checked={selectedNode.data.deceased} onChange={e => updateSelectedNode('deceased', e.target.checked)} />
+                    <input type="checkbox" checked={selectedNode.data.deceased as boolean || false} onChange={e => updateSelectedNode('deceased', e.target.checked)} />
                     Fallecido (X)
                   </label>
                 </div>
@@ -253,7 +261,7 @@ export default function GenogramaEditor({ initialNodes = [], initialEdges = [], 
             {selectedEdge && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                 <label>Tipo de Relación</label>
-                <select className="input-field" value={selectedEdge.data?.relType || 'normal'} onChange={e => updateSelectedEdge(e.target.value)}>
+                <select className="input-field" value={selectedEdge.data?.relType as string || 'normal'} onChange={e => updateSelectedEdge(e.target.value)}>
                   <option value="normal">Normal / Consanguinidad</option>
                   <option value="fusionada">Fusionada (===)</option>
                   <option value="conflictiva">Conflictiva (/\/\/\)</option>
