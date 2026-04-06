@@ -208,12 +208,18 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
           {entrevista.genograma_data && (entrevista.genograma_data.nodes?.length > 0) && (
             <div style={{ marginTop: 'var(--space-6)', pageBreakInside: 'avoid' }}>
               <h4 style={{ marginBottom: 'var(--space-3)', color: 'var(--on-surface-variant)' }}>Genograma</h4>
-              <div style={{ height: '400px', border: '1px solid var(--outline-variant)', borderRadius: '8px', overflow: 'hidden' }}>
-                <GenogramaEditor 
-                  initialNodes={entrevista.genograma_data.nodes}
-                  initialEdges={entrevista.genograma_data.edges}
-                  readOnly={true}
-                />
+              <div style={{ border: '1px solid var(--outline-variant)', borderRadius: '8px', overflow: 'hidden', minHeight: '400px' }}>
+                {entrevista.genograma_data.imagen_base64 ? (
+                  <img src={entrevista.genograma_data.imagen_base64} alt="Genograma" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                ) : (
+                  <div style={{ height: '400px' }}>
+                    <GenogramaEditor 
+                      initialNodes={entrevista.genograma_data.nodes}
+                      initialEdges={entrevista.genograma_data.edges}
+                      readOnly={true}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}

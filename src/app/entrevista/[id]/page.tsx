@@ -775,7 +775,14 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 <GenogramaEditor 
                   initialNodes={entrevista.genograma_data?.nodes || []}
                   initialEdges={entrevista.genograma_data?.edges || []}
-                  onChange={(nodes, edges) => setEntrevista(prev => ({ ...prev, genograma_data: { nodes, edges } }))}
+                  onChange={(nodes, edges, b64) => setEntrevista(prev => ({ 
+                    ...prev, 
+                    genograma_data: { 
+                      nodes, 
+                      edges, 
+                      imagen_base64: b64 || prev.genograma_data?.imagen_base64 
+                    } 
+                  }))}
                 />
               </div>
             </div>

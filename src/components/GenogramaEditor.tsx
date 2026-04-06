@@ -131,7 +131,7 @@ const edgeTypes = {
   genogram: GenogramEdge
 };
 
-export default function GenogramaEditor({ initialNodes = [], initialEdges = [], onChange, readOnly = false }: { initialNodes?: Node[], initialEdges?: Edge[], onChange?: (n: Node[], e: Edge[]) => void, readOnly?: boolean }) {
+export default function GenogramaEditor({ initialNodes = [], initialEdges = [], onChange, readOnly = false }: { initialNodes?: Node[], initialEdges?: Edge[], onChange?: (n: Node[], e: Edge[], b64?: string) => void, readOnly?: boolean }) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -143,8 +143,23 @@ export default function GenogramaEditor({ initialNodes = [], initialEdges = [], 
     setTimeout(() => save(), 100);
   }, [setEdges]);
 
-  const save = () => {
-    if (onChange) onChange(nodes, edges);
+  const save = (overrideBase64?: string) => {
+    if (onChange) onChange(nodes, edges, overrideBase64);
+  };
+
+  const captureForPDF = async () => {
+    try {
+      const { toPng } = await import('html-to-image');
+      const element = document.querySelector('.react-flow') as HTMLElement;
+      if (element) {
+        const dataUrl = await toPng(element, { backgroundColor: '#ffffff', pixelRatio: 2 });
+        save(dataUrl);
+        alert('Imagen capturada con éxito. Ahora se verá en el PDF.');
+      }
+    } catch (err) {
+      console.error('Error capturing image:', err);
+      alert('Error al capturar la imagen. Inténtelo de nuevo.');
+    }
   };
 
   const addNode = (gender: 'male' | 'female') => {
@@ -191,21 +206,25 @@ export default function GenogramaEditor({ initialNodes = [], initialEdges = [], 
       
       {/* TOOLBAR */}
       {!readOnly && (
-        <div style={{ padding: '10px', background: '#f5f5f5', borderBottom: '1px solid #ccc', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ padding: '10px', background: '#f5f5f5', borderBottom: '1px solid #ccc', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           <button type="button" className="btn btn-secondary" onClick={() => addNode('male')}>+ Hombre (■)</button>
           <button type="button" className="btn btn-secondary" onClick={() => addNode('female')}>+ Mujer (●)</button>
           <button type="button" className="btn btn-tertiary" onClick={() => {
              if (selectedNodeId) {
                setNodes(ns => ns.filter(n => n.id !== selectedNodeId));
                setSelectedNodeId(null);
-               setTimeout(save, 100);
+               setTimeout(() => save(), 100);
              }
              if (selectedEdgeId) {
                setEdges(es => es.filter(e => e.id !== selectedEdgeId));
                setSelectedEdgeId(null);
-               setTimeout(save, 100);
+               setTimeout(() => save(), 100);
              }
           }}>Eliminar Seleccionado</button>
+          <div style={{ flex: 1 }} />
+          <button type="button" className="btn btn-primary" onClick={captureForPDF} style={{ background: '#005f73' }}>
+            📸 Capturar para PDF
+          </button>
         </div>
       )}
 
