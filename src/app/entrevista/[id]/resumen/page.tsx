@@ -89,59 +89,69 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
       {/* Top Actions (hidden during print) */}
       <div className={styles.topActions}>
         <button className="btn btn-secondary" onClick={() => router.push('/dashboard')}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
           Volver
         </button>
         <div style={{ flex: 1 }} />
         <button className="btn btn-secondary" onClick={handleEdit}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
           Habilitar Edición
         </button>
         <button className="btn btn-primary" onClick={handlePrint}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
           Exportar PDF
         </button>
       </div>
 
       {/* Printable Document */}
       <div className={styles.document}>
-        {/* Editable Header Section */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', border: '1.5px dashed var(--outline-variant)', minHeight: '120px', marginBottom: '1.5rem', fontFamily: 'Arial, sans-serif' }}>
-          {/* Left Block: Logos */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', padding: '10px', borderRight: '1.5px dashed var(--outline-variant)' }}>
-             <img src="/escudo.png" alt="Escudo Municipio de Morales" style={{ height: '80px', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-             <img src="/logo-pdet.png" alt="Logo PDET" style={{ height: '80px', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-          </div>
-          
-          {/* Center Block: Title */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px', textAlign: 'center' }}>
-            <h4 style={{ margin: 0, fontWeight: 500, color: '#333', fontSize: '1rem', lineHeight: '1.4' }}>ALCALDÍA MUNICIPAL<br/>NIT: 891500982-6</h4>
-            <h2 style={{ color: '#2e7d32', margin: '15px 0 0 0', textTransform: 'uppercase', fontSize: '1.5rem', fontWeight: 800 }}>INFORME TRABAJO SOCIAL</h2>
-          </div>
-          
-          {/* Right Block: Metadata */}
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px', padding: '10px 15px', borderLeft: '1.5px dashed var(--outline-variant)', fontSize: '0.85rem', color: '#555' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Fecha:</span> <span>junio de 2024</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Versión:</span> <span>11</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Página:</span> <span>1 de 13</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Cód:</span> <span>F-PM-096</span></div>
-          </div>
-        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none' }}>
+          <thead className="print-header">
+            <tr>
+              <td style={{ padding: 0 }}>
+                {/* Editable Header Section */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', border: '1.5px dashed var(--outline-variant)', minHeight: '120px', marginBottom: '1.5rem', fontFamily: 'Arial, sans-serif', background: '#fff' }}>
+                  {/* Left Block: Logos */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', padding: '10px', borderRight: '1.5px dashed var(--outline-variant)' }}>
+                    <img src="/escudo.png" alt="Escudo Municipio de Morales" style={{ height: '80px', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    <img src="/logo-pdet.png" alt="Logo PDET" style={{ height: '80px', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  </div>
+        
+                  {/* Center Block: Title */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px', textAlign: 'center' }}>
+                    <h4 style={{ margin: 0, fontWeight: 500, color: '#333', fontSize: '1rem', lineHeight: '1.4' }}>ALCALDÍA MUNICIPAL<br />NIT: 891500982-6</h4>
+                    <h2 style={{ color: '#2e7d32', margin: '15px 0 0 0', textTransform: 'uppercase', fontSize: '1.5rem', fontWeight: 800 }}>INFORME TRABAJO SOCIAL</h2>
+                  </div>
+        
+                  {/* Right Block: Metadata */}
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px', padding: '10px 15px', borderLeft: '1.5px dashed var(--outline-variant)', fontSize: '0.85rem', color: '#555' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Fecha:</span> <span>junio de 2024</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Versión:</span> <span>11</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Página:</span> <span className="page-number-placeholder">____ de ____</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Cód:</span> <span>F-PM-096</span></div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={{ padding: 0 }}>
 
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <textarea 
+          <textarea
             className="print-textarea"
             value={tituloInforme}
             onChange={(e) => setTituloInforme(e.target.value)}
-            style={{ 
-              width: '100%', 
-              textAlign: 'center', 
-              fontSize: '1.25rem', 
-              fontWeight: 'bold', 
-              border: '1px solid transparent', 
-              resize: 'none', 
-              outline: 'none', 
-              overflow: 'hidden', 
+            style={{
+              width: '100%',
+              textAlign: 'center',
+              fontSize: '1.25rem',
+              fontWeight: 'bold',
+              border: '1px solid transparent',
+              resize: 'none',
+              outline: 'none',
+              overflow: 'hidden',
               minHeight: '40px',
               fontFamily: 'inherit',
               textTransform: 'uppercase'
@@ -237,7 +247,7 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
             <div style={{ gridColumn: '1 / -1' }}><strong>Actividades Familiares:</strong> {(dinamica.actividades_familiares as string[] ?? []).join(', ')}</div>
             <div style={{ gridColumn: '1 / -1' }}><strong>Métodos de Corrección:</strong> {(dinamica.metodos_correccion as string[] ?? []).join(', ')} (Aplica: {dinamica.quien_corrige})</div>
           </div>
-          
+
           {entrevista.genograma_data && (entrevista.genograma_data.nodes?.length > 0) && (
             <div style={{ marginTop: 'var(--space-6)', pageBreakInside: 'avoid' }}>
               <h4 style={{ marginBottom: 'var(--space-3)', color: 'var(--on-surface-variant)' }}>Genograma</h4>
@@ -246,7 +256,7 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
                   <img src={entrevista.genograma_data.imagen_base64} alt="Genograma" style={{ width: '100%', height: 'auto', display: 'block' }} />
                 ) : (
                   <div style={{ height: '400px' }}>
-                    <GenogramaEditor 
+                    <GenogramaEditor
                       initialNodes={entrevista.genograma_data.nodes}
                       initialEdges={entrevista.genograma_data.edges}
                       readOnly={true}
@@ -293,12 +303,12 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
               try {
                 const parsed = JSON.parse(analisis.metodologia_instrumentos || '[]');
                 if (Array.isArray(parsed)) items = parsed;
-              } catch {}
-              
+              } catch { }
+
               if (items.length === 0) {
                 return <p>Sin información registrada.</p>;
               }
-              
+
               return (
                 <table className={styles.table} style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
                   <thead>
@@ -359,6 +369,11 @@ export default function ResumenPage({ params }: { params: Promise<{ id: string }
             <small>Trabajo Social - TP: {entrevista.tarjeta_profesional}</small>
           </div>
         </div>
+
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   );
