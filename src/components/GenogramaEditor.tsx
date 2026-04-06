@@ -227,9 +227,11 @@ export default function GenogramaEditor({ initialNodes = [], initialEdges = [], 
       <style dangerouslySetInnerHTML={{__html: `
         .hide-handles .react-flow__handle { display: none !important; }
         .hide-handles .react-flow__background { opacity: 0 !important; }
+        .hide-handles .react-flow__panel { display: none !important; }
         ${readOnly ? `
           .react-flow__handle { display: none !important; }
           .react-flow__background { opacity: 0 !important; }
+          .react-flow__panel { display: none !important; }
         ` : ''}
       `}} />
       {/* TOOLBAR */}
