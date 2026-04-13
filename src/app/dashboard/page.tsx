@@ -195,7 +195,7 @@ export default function DashboardPage() {
                   <td>
                     <button 
                       className="btn btn-tertiary" 
-                      onClick={(ev) => { ev.stopPropagation(); setDeleteConfirmId(e.id); }}
+                      onClick={(ev) => { ev.stopPropagation(); setDeleteConfirmId(e.id || null); }}
                       style={{ color: 'var(--error)' }}
                       title="Eliminar"
                     >
