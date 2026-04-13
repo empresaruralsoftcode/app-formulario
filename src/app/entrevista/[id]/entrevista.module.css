@@ -74,7 +74,7 @@
 .main {
   flex: 1;
   padding: var(--space-10) var(--space-12);
-  max-width: 900px;
+  max-width: 1200px;
   overflow-y: auto;
 }
 
@@ -191,4 +191,181 @@
   .bannerContent {
     flex-direction: column;
   }
+}
+
+/* ── Observation Fields ── */
+.labelContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-1);
+}
+
+.observationSwitch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--on-surface-variant);
+}
+
+.observationArea {
+  margin-top: var(--space-2);
+  border-left: 3px solid var(--primary-fixed-dim);
+  padding-left: var(--space-3);
+  animation: slideIn 0.15s ease-out forwards;
+}
+
+/* ── Toggle Switch ── */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 16px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--outline-variant);
+  transition: .15s;
+  border-radius: 16px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 12px;
+  width: 12px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .15s;
+  border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+  background-color: var(--primary);
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(14px);
+}
+
+/* ── Matrix Table ── */
+.matrixContainer {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline-variant);
+  background: var(--surface-container-lowest);
+  box-shadow: var(--shadow-ambient);
+  margin-bottom: var(--space-4);
+}
+
+.matrixTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.matrixTable th {
+  background: var(--primary);
+  color: white;
+  font-family: var(--font-headline);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+}
+
+.matrixTable tr:nth-child(even) {
+  background: var(--surface-container-lowest);
+}
+
+.matrixTable tr:nth-child(odd) {
+  background: var(--surface-container-low);
+}
+
+.matrixTable tr:hover {
+  background: var(--primary-fixed);
+}
+
+.matrixCell {
+  padding: 0;
+  border: 1px solid var(--outline-variant);
+  vertical-align: top;
+}
+
+.matrixInput {
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  padding: var(--space-3);
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--on-surface);
+  resize: none;
+  display: block;
+  outline: none;
+  transition: background 0.2s ease;
+}
+
+.matrixInput:focus {
+  background: white;
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.matrixSelect {
+  width: 100%;
+  height: 100%;
+  padding: var(--space-3);
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--on-surface);
+  outline: none;
+  cursor: pointer;
+}
+
+.matrixSelect:focus {
+  background: white;
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.removeRowBtn {
+  color: var(--error);
+  padding: var(--space-2);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.removeRowBtn:hover {
+  background: var(--error-container);
+  color: var(--on-error-container);
 }

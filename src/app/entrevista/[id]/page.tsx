@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
@@ -119,6 +119,106 @@ function BooleanSelect({ value, onChange, label }: { value: boolean | null; onCh
   );
 }
 
+function BooleanGroup({ value, onChange }: { value: boolean | null; onChange: (v: boolean | null) => void }) {
+  return (
+    <div className="radio-group">
+      <button type="button" className={`chip ${value === true ? 'chip-selected' : 'chip-unselected'}`} onClick={() => onChange(true)}>Sí</button>
+      <button type="button" className={`chip ${value === false ? 'chip-selected' : 'chip-unselected'}`} onClick={() => onChange(false)}>No</button>
+    </div>
+  );
+}
+
+function SectionObservation({
+  label,
+  fieldName,
+  observations,
+  onToggle,
+  onChangeNote,
+}: {
+  label: string;
+  fieldName: string;
+  observations: Record<string, { note: string, active: boolean }>;
+  onToggle: (name: string) => void;
+  onChangeNote: (name: string, note: string) => void;
+}) {
+  const obs = (observations && observations[fieldName]) || { note: '', active: false };
+
+  return (
+    <div style={{ marginTop: 'var(--space-3)', padding: 'var(--space-3)', backgroundColor: 'var(--color-bg-subtle)', borderRadius: '8px' }}>
+      <div className={styles.labelContainer}>
+        <label style={{ fontWeight: 600 }}>{label}</label>
+        <label 
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '4px 8px', borderRadius: '4px' }}
+        >
+          <span style={{ fontSize: '10px', opacity: 0.7 }}>OBS.</span>
+          <div className={styles.switch}>
+            <input type="checkbox" checked={obs.active} onChange={() => onToggle(fieldName)} />
+            <span className={styles.slider} style={obs.active ? { backgroundColor: 'var(--primary)' } : {}}></span>
+          </div>
+        </label>
+      </div>
+      {obs.active && (
+        <div className={styles.observationArea}>
+          <textarea 
+            className="input-field" 
+            placeholder="Añada una observación..." 
+            value={obs.note} 
+            onChange={(e) => onChangeNote(fieldName, e.target.value)}
+            rows={2}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ObservationField({ 
+  label, 
+  fieldName, 
+  observations, 
+  onToggle, 
+  onChangeNote, 
+  children 
+}: { 
+  label: string; 
+  fieldName: string; 
+  observations: Record<string, { note: string, active: boolean }>; 
+  onToggle: (name: string) => void;
+  onChangeNote: (name: string, note: string) => void;
+  children: React.ReactNode;
+}) {
+  const obs = (observations && observations[fieldName]) || { note: '', active: false };
+
+  return (
+    <div className="input-group">
+      <div className={styles.labelContainer}>
+        <label>{label}</label>
+        <label 
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '4px 8px', borderRadius: '4px' }}
+        >
+          <span style={{ fontSize: '10px', opacity: 0.7 }}>OBS.</span>
+          <div className={styles.switch}>
+            <input type="checkbox" checked={obs.active} onChange={() => onToggle(fieldName)} />
+            <span className={styles.slider} style={obs.active ? { backgroundColor: 'var(--primary)' } : {}}></span>
+          </div>
+        </label>
+      </div>
+      {children}
+      {obs.active && (
+        <div className={styles.observationArea}>
+          <textarea 
+            className="input-field" 
+            placeholder="Añada una observación..." 
+            value={obs.note} 
+            onChange={(e) => onChangeNote(fieldName, e.target.value)}
+            rows={2}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function EntrevistaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -126,6 +226,13 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [step]);
 
   // Form Data
   const [entrevista, setEntrevista] = useState<Partial<T.Entrevista>>({
@@ -135,6 +242,9 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
     pais_nacimiento: 'Colombia', nacionalidad: 'Colombiana', tiene_discapacidad: false,
     categorias_discapacidad: [], lenguas: [], sexo: '', tipo_documento: '', grupo_etnico: '',
     descripcion_discapacidad_otra: '', pueblo_indigena: '', resguardo: '',
+  });
+  const [datosAgresor, setDatosAgresor] = useState<Partial<T.DatosAgresor>>({
+    nombre: '', edad: '', lugar_residencia: '', ocupacion: '', grupo_poblacional_enfoque_diferencial: '', parentesco: '',
   });
   const [condiciones, setCondiciones] = useState<Partial<T.CondicionesHabitacionales>>({
     lugar_descanso: '', afiliacion_salud: '', vacunacion_completa: null,
@@ -155,8 +265,83 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
     estimulos_3_dias: [], reconocimiento: [], nna_queda_solo: null,
   });
   const [analisis, setAnalisis] = useState<Partial<T.AnalisisSocial>>({
-    metodologia_instrumentos: '', manifestaciones_nna: '', matriz_vulneracion_derechos: '', factores_riesgo_generatividad: '', analisis_recomendaciones: '',
+    metodologia_instrumentos: '[]', 
+    manifestaciones_nna: '', 
+    matriz_vulneracion_derechos: '[]', 
+    factores_riesgo: '', 
+    generatividad: '', 
+    analisis_social: '',
+    recomendaciones: [],
   });
+
+  const saveObsTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
+
+  const toggleObservation = useCallback(async (name: string) => {
+    console.log('toggleObservation called:', name);
+    const current = entrevista.observaciones_campos || {};
+    const obs = current[name] || { note: '', active: false };
+    const newActive = !obs.active;
+    const newObs = { ...obs, active: newActive };
+    
+    setEntrevista(prev => {
+      const obsData = prev.observaciones_campos || {};
+      return {
+        ...prev,
+        observaciones_campos: {
+          ...obsData,
+          [name]: newObs
+        }
+      };
+    });
+
+    if (saveObsTimeoutRef.current[name]) {
+      clearTimeout(saveObsTimeoutRef.current[name]);
+    }
+
+    saveObsTimeoutRef.current[name] = setTimeout(async () => {
+      delete saveObsTimeoutRef.current[name];
+      const obsData = entrevista.observaciones_campos || {};
+      await supabase.from('entrevistas').update({ 
+        observaciones_campos: {
+          ...obsData,
+          [name]: newObs
+        }
+      }).eq('id', id);
+      console.log('Saved to DB:', name, newObs);
+    }, 300);
+  }, [id, entrevista.observaciones_campos]);
+
+  const updateObservationNote = useCallback(async (name: string, note: string) => {
+    const current = entrevista.observaciones_campos || {};
+    const obs = current[name] || { note: '', active: false };
+    const newObs = { ...obs, note };
+    
+    setEntrevista(prev => {
+      const obsData = prev.observaciones_campos || {};
+      return {
+        ...prev,
+        observaciones_campos: {
+          ...obsData,
+          [name]: newObs
+        }
+      };
+    });
+
+    if (saveObsTimeoutRef.current[name]) {
+      clearTimeout(saveObsTimeoutRef.current[name]);
+    }
+
+    saveObsTimeoutRef.current[name] = setTimeout(async () => {
+      delete saveObsTimeoutRef.current[name];
+      const obsData = entrevista.observaciones_campos || {};
+      await supabase.from('entrevistas').update({ 
+        observaciones_campos: {
+          ...obsData,
+          [name]: newObs
+        }
+      }).eq('id', id);
+    }, 1000);
+  }, [id, entrevista.observaciones_campos]);
 
   useEffect(() => {
     loadData();
@@ -168,6 +353,9 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
 
     const { data: nna } = await supabase.from('datos_nna').select('*').eq('entrevista_id', id).single();
     if (nna) setDatosNNA(nna);
+
+    const { data: agre } = await supabase.from('datos_agresor').select('*').eq('entrevista_id', id).single();
+    if (agre) setDatosAgresor(agre);
 
     const { data: cond } = await supabase.from('condiciones_habitacionales').select('*').eq('entrevista_id', id).single();
     if (cond) setCondiciones(cond);
@@ -185,7 +373,13 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
     if (cuid) setCuidador(cuid);
 
     const { data: anal } = await supabase.from('analisis_social').select('*').eq('entrevista_id', id).single();
-    if (anal) setAnalisis(anal);
+    if (anal) {
+      setAnalisis({
+        ...anal,
+        analisis_social: anal.analisis_social_content || anal.analisis_recomendaciones || '',
+        recomendaciones: Array.isArray(anal.recomendaciones_lista) ? anal.recomendaciones_lista : [],
+      });
+    }
 
     setLoading(false);
   }
@@ -218,6 +412,7 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
     try {
       // Step 0: General + Anexos
       if (step >= 0 || step === 7) {
+        // Remove dots from tarjeta_profesional before saving
         const payload = { ...entrevista, id };
         delete (payload as any).created_at;
         const { data: entData, error: entErr } = await supabase
@@ -231,19 +426,47 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
         if (entData && entData.length > 0) setEntrevista(entData[0]);
       }
 
-      // Step 1: Datos NNA
+      // Step 1: Datos NNA & Agresor
       if (step >= 1) {
-        const payload = { ...datosNNA, entrevista_id: id };
-        delete (payload as any).created_at;
+        const payloadNNA = { ...datosNNA, entrevista_id: id };
+        delete (payloadNNA as any).created_at;
+
+        // Ensure Indigenous data is preserved if group is Indigena
+        if (payloadNNA.grupo_etnico && !payloadNNA.grupo_etnico.startsWith('Indígena')) {
+          payloadNNA.pueblo_indigena = '';
+          payloadNNA.resguardo = '';
+        }
+
+        // Convert empty strings to null to avoid CHECK constraint violations
+        (Object.keys(payloadNNA) as (keyof typeof payloadNNA)[]).forEach(k => {
+          if (payloadNNA[k] === '') (payloadNNA[k] as any) = null;
+        });
+
         const { data: nnaData, error: nnaErr } = await supabase
           .from('datos_nna')
-          .upsert(payload, { onConflict: 'entrevista_id' })
+          .upsert(payloadNNA, { onConflict: 'entrevista_id' })
           .select();
         if (nnaErr) {
           console.error('Error saving datos_nna:', formatSupabaseError(nnaErr));
           throw new Error(`Error guardando datos del NNA: ${formatSupabaseError(nnaErr)}`);
         }
         if (nnaData && nnaData.length > 0) setDatosNNA(nnaData[0]);
+
+        const payloadAgresor = { ...datosAgresor, entrevista_id: id };
+        delete (payloadAgresor as any).created_at;
+        (Object.keys(payloadAgresor) as (keyof typeof payloadAgresor)[]).forEach(k => {
+          if (payloadAgresor[k] === '') (payloadAgresor[k] as any) = null;
+        });
+        const { data: agreData, error: agreErr } = await supabase
+          .from('datos_agresor')
+          .upsert(payloadAgresor, { onConflict: 'entrevista_id' })
+          .select();
+        if (agreErr && agreErr.code !== '42P01') { 
+          // 42P01 is table undefined. We ignore this safely locally if not migrated yet.
+          console.error('Error saving datos_agresor:', formatSupabaseError(agreErr));
+          throw new Error(`Error guardando datos del agresor: ${formatSupabaseError(agreErr)}`);
+        }
+        if (agreData && agreData.length > 0) setDatosAgresor(agreData[0]);
       }
 
       // Step 2: Condiciones Habitacionales
@@ -280,9 +503,11 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
             const d = { ...ig, entrevista_id: id, orden: i };
             delete (d as any).id; 
             delete (d as any).created_at;
-            delete (d as any).edad;
             if (!d.fecha_nacimiento) d.fecha_nacimiento = null as any;
             if (!d.numero_documento) d.numero_documento = null as any;
+            (Object.keys(d) as (keyof typeof d)[]).forEach(k => {
+              if (d[k] === '') (d[k] as any) = null;
+            });
             return d;
           });
           const { data: intData, error: intErr } = await supabase.from('integrantes_hogar').insert(intPayload).select();
@@ -295,6 +520,9 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
         
         const dinPayload = { ...dinamica, entrevista_id: id };
         delete (dinPayload as any).created_at;
+        (Object.keys(dinPayload) as (keyof typeof dinPayload)[]).forEach(k => {
+          if (dinPayload[k] === '') (dinPayload[k] as any) = null;
+        });
         const { data: dinData, error: dinErr } = await supabase
           .from('dinamica_familiar')
           .upsert(dinPayload, { onConflict: 'entrevista_id' })
@@ -310,6 +538,9 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
       if (step >= 4) {
         const payload = { ...vulnerabilidad, entrevista_id: id };
         delete (payload as any).created_at;
+        (Object.keys(payload) as (keyof typeof payload)[]).forEach(k => {
+          if (payload[k] === '') (payload[k] as any) = null;
+        });
         const { data: vulnData, error: vulnErr } = await supabase
           .from('vulnerabilidad_entorno')
           .upsert(payload, { onConflict: 'entrevista_id' })
@@ -325,6 +556,9 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
       if (step >= 5) {
         const payload = { ...cuidador, entrevista_id: id };
         delete (payload as any).created_at;
+        (Object.keys(payload) as (keyof typeof payload)[]).forEach(k => {
+          if (payload[k] === '') (payload[k] as any) = null;
+        });
         const { data: cuidData, error: cuidErr } = await supabase
           .from('informacion_cuidador')
           .upsert(payload, { onConflict: 'entrevista_id' })
@@ -336,10 +570,19 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
         if (cuidData && cuidData.length > 0) setCuidador(cuidData[0]);
       }
 
-      // Step 6: Analisis
-      if (step >= 6) {
-        const payload = { ...analisis, entrevista_id: id };
-        delete (payload as any).created_at;
+      // Always save Analisis Social table if it was modified (it now contains methodology used in Step 1)
+      if (step >= 1) {
+        const payload: any = { 
+          entrevista_id: id,
+          metodologia_instrumentos: analisis.metodologia_instrumentos,
+          manifestaciones_nna: analisis.manifestaciones_nna,
+          matriz_vulneracion_derechos: analisis.matriz_vulneracion_derechos,
+          factores_riesgo: analisis.factores_riesgo,
+          generatividad: analisis.generatividad,
+          analisis_social_content: analisis.analisis_social,
+          recomendaciones_lista: analisis.recomendaciones || [],
+        };
+        
         const { data: analData, error: analErr } = await supabase
           .from('analisis_social')
           .upsert(payload, { onConflict: 'entrevista_id' })
@@ -348,7 +591,14 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
           console.error('Error saving analisis:', formatSupabaseError(analErr));
           throw new Error(`Error guardando análisis: ${formatSupabaseError(analErr)}`);
         }
-        if (analData && analData.length > 0) setAnalisis(analData[0]);
+        if (analData && analData.length > 0) {
+          const savedAnal = analData[0];
+          setAnalisis({
+            ...savedAnal,
+            analisis_social: savedAnal.analisis_social_content,
+            recomendaciones: savedAnal.recomendaciones_lista,
+          });
+        }
       }
 
       setSaved(true);
@@ -444,7 +694,7 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
         </div>
       </aside>
 
-      <main className={styles.main}>
+      <main className={styles.main} ref={mainRef}>
         {entrevista.estado === 'completado' && (
           <div className={styles.completedBanner}>
             <div className={styles.bannerContent}>
@@ -480,11 +730,14 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                   <label>Elaborado por</label>
                   <input className="input-field" value={entrevista.elaborado_por || ''} onChange={e => setEntrevista({ ...entrevista, elaborado_por: e.target.value })} />
                 </div>
-              </div>
-              <div className="form-row">
                 <div className="input-group">
                   <label>Tarjeta Profesional</label>
-                  <input className="input-field" value={entrevista.tarjeta_profesional || ''} onChange={e => setEntrevista({ ...entrevista, tarjeta_profesional: e.target.value })} />
+                  <input 
+                    className="input-field" 
+                    value={entrevista.tarjeta_profesional || ''} 
+                    onChange={e => setEntrevista({ ...entrevista, tarjeta_profesional: e.target.value.replace(/\./g, '') })} 
+                    placeholder="Número sin puntos..."
+                  />
                 </div>
                 <div className="input-group">
                   <label>Dirigido a</label>
@@ -501,20 +754,30 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
 
         {step === 1 && (
           <div className="animate-slide-up">
-            <h2 className={styles.stepTitle}>Datos del Niño, Niña o Adolescente</h2>
+            <h2 className={styles.stepTitle}>Identificación del NNA, Objetivo y Presunto Agresor</h2>
             <div className="form-section">
-              <h3 className="form-section-title">Identificación</h3>
+              <h3 className="form-section-title">1. Datos Básicos del NNA</h3>
               <div className="form-row">
-                <div className="input-group"><label>Nombres</label><input className="input-field" value={datosNNA.nombres || ''} onChange={e => setDatosNNA({...datosNNA, nombres: e.target.value})} /></div>
-                <div className="input-group"><label>Apellidos</label><input className="input-field" value={datosNNA.apellidos || ''} onChange={e => setDatosNNA({...datosNNA, apellidos: e.target.value})} /></div>
-              </div>
-              <div className="form-row">
-                <div className="input-group"><label>Fecha de Nacimiento</label><input type="date" className="input-field" value={datosNNA.fecha_nacimiento || ''} onChange={e => {
-                  const dob = e.target.value;
-                  const age = calculateAge(dob);
-                  setDatosNNA({...datosNNA, fecha_nacimiento: dob, edad: age});
-                }} /></div>
-                <div className="input-group"><label>Edad</label><input type="number" className="input-field" value={datosNNA.edad ?? ''} onChange={e => setDatosNNA({...datosNNA, edad: e.target.value ? Number(e.target.value) : null})} /></div>
+                <div className="input-group">
+                  <label>Nombres</label>
+                  <input className="input-field" value={datosNNA.nombres || ''} onChange={e => setDatosNNA({...datosNNA, nombres: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Apellidos</label>
+                  <input className="input-field" value={datosNNA.apellidos || ''} onChange={e => setDatosNNA({...datosNNA, apellidos: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Fecha de Nacimiento</label>
+                  <input type="date" className="input-field" value={datosNNA.fecha_nacimiento || ''} onChange={e => {
+                    const dob = e.target.value;
+                    const age = calculateAge(dob);
+                    setDatosNNA({...datosNNA, fecha_nacimiento: dob, edad: age});
+                  }} />
+                </div>
+                <div className="input-group">
+                  <label>Edad</label>
+                  <input type="number" className="input-field" value={datosNNA.edad ?? ''} onChange={e => setDatosNNA({...datosNNA, edad: e.target.value ? Number(e.target.value) : null})} />
+                </div>
               </div>
               <div className="form-row">
                 <div className="input-group">
@@ -524,88 +787,267 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                     {T.TIPOS_DOCUMENTO.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
-                <div className="input-group"><label>Número de Documento</label><input className="input-field" value={datosNNA.numero_documento || ''} onChange={e => setDatosNNA({...datosNNA, numero_documento: e.target.value})} /></div>
-              </div>
-              <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
-                <label>Sexo</label>
-                <div className="radio-group">
-                  {T.SEXOS.map(s => <button key={s.value} type="button" className={`chip ${datosNNA.sexo === s.value ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setDatosNNA({...datosNNA, sexo: s.value})}>{s.label}</button>)}
+                <div className="input-group">
+                  <label>Número de Documento</label>
+                  <input className="input-field" value={datosNNA.numero_documento || ''} onChange={e => setDatosNNA({...datosNNA, numero_documento: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Sexo</label>
+                  <div className="radio-group">
+                    {T.SEXOS.map(s => <button key={s.value} type="button" className={`chip ${datosNNA.sexo === s.value ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setDatosNNA({...datosNNA, sexo: s.value})}>{s.label}</button>)}
+                  </div>
                 </div>
               </div>
+              <SectionObservation label="Observaciones" fieldName="nna_identificacion" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
               <h3 className="form-section-title">Ubicación</h3>
               <div className="form-row">
-                <div className="input-group"><label>País de Nacimiento</label><input className="input-field" value={datosNNA.pais_nacimiento || ''} onChange={e => setDatosNNA({...datosNNA, pais_nacimiento: e.target.value})} /></div>
-                <div className="input-group"><label>Nacionalidad</label><input className="input-field" value={datosNNA.nacionalidad || ''} onChange={e => setDatosNNA({...datosNNA, nacionalidad: e.target.value})} /></div>
+                <div className="input-group">
+                  <label>País de Nacimiento</label>
+                  <input className="input-field" value={datosNNA.pais_nacimiento || ''} onChange={e => setDatosNNA({...datosNNA, pais_nacimiento: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Nacionalidad</label>
+                  <input className="input-field" value={datosNNA.nacionalidad || ''} onChange={e => setDatosNNA({...datosNNA, nacionalidad: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Departamento</label>
+                  <input className="input-field" value={datosNNA.departamento || ''} onChange={e => setDatosNNA({...datosNNA, departamento: e.target.value})} />
+                </div>
               </div>
               <div className="form-row">
-                <div className="input-group"><label>Departamento</label><input className="input-field" value={datosNNA.departamento || ''} onChange={e => setDatosNNA({...datosNNA, departamento: e.target.value})} /></div>
-                <div className="input-group"><label>Municipio</label><input className="input-field" value={datosNNA.municipio || ''} onChange={e => setDatosNNA({...datosNNA, municipio: e.target.value})} /></div>
-                <div className="input-group"><label>Vereda</label><input className="input-field" value={datosNNA.vereda || ''} onChange={e => setDatosNNA({...datosNNA, vereda: e.target.value})} /></div>
+                <div className="input-group">
+                  <label>Municipio</label>
+                  <input className="input-field" value={datosNNA.municipio || ''} onChange={e => setDatosNNA({...datosNNA, municipio: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Vereda</label>
+                  <input className="input-field" value={datosNNA.vereda || ''} onChange={e => setDatosNNA({...datosNNA, vereda: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Celular del Acudiente</label>
+                  <input className="input-field" value={datosNNA.celular_acudiente || ''} onChange={e => setDatosNNA({...datosNNA, celular_acudiente: e.target.value})} />
+                </div>
               </div>
-              <div className="input-group"><label>Celular del Acudiente</label><input className="input-field" value={datosNNA.celular_acudiente || ''} onChange={e => setDatosNNA({...datosNNA, celular_acudiente: e.target.value})} /></div>
+              <SectionObservation label="Observaciones" fieldName="nna_ubicacion" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
               <h3 className="form-section-title">Educación</h3>
               <div className="form-row">
-                <div className="input-group"><label>Institución Educativa</label><input className="input-field" value={datosNNA.institucion_educativa || ''} onChange={e => setDatosNNA({...datosNNA, institucion_educativa: e.target.value})} /></div>
-                <div className="input-group"><label>Grado</label><input className="input-field" value={datosNNA.grado || ''} onChange={e => setDatosNNA({...datosNNA, grado: e.target.value})} /></div>
+                <div className="input-group">
+                  <label>Institución Educativa</label>
+                  <input className="input-field" value={datosNNA.institucion_educativa || ''} onChange={e => setDatosNNA({...datosNNA, institucion_educativa: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Grado</label>
+                  <input className="input-field" value={datosNNA.grado || ''} onChange={e => setDatosNNA({...datosNNA, grado: e.target.value})} />
+                </div>
               </div>
+              <SectionObservation label="Observaciones" fieldName="nna_educacion" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
               <h3 className="form-section-title">Discapacidad</h3>
-              <BooleanSelect label="¿Tiene discapacidad?" value={datosNNA.tiene_discapacidad ?? null} onChange={v => setDatosNNA({...datosNNA, tiene_discapacidad: v ?? false})} />
+              <div className="input-group">
+                <label>¿Tiene discapacidad?</label>
+                <div className="radio-group">
+                  <button type="button" className={`chip ${datosNNA.tiene_discapacidad === true ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setDatosNNA({...datosNNA, tiene_discapacidad: true})}>Sí</button>
+                  <button type="button" className={`chip ${datosNNA.tiene_discapacidad === false ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setDatosNNA({...datosNNA, tiene_discapacidad: false})}>No</button>
+                </div>
+              </div>
               {datosNNA.tiene_discapacidad && (
                 <>
-                  <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
-                    <label>Categorías de Discapacidad</label>
+                  <ObservationField label="Categorías de Discapacidad" fieldName="nna_categorias_discapacidad" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
                     <ChipSelector options={T.CATEGORIAS_DISCAPACIDAD} selected={datosNNA.categorias_discapacidad as string[] || []} onChange={v => setDatosNNA({...datosNNA, categorias_discapacidad: v})} />
-                  </div>
+                  </ObservationField>
                   {(datosNNA.categorias_discapacidad as string[] || []).includes('Otra') && (
-                    <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
-                      <label>Describa la discapacidad</label>
+                    <ObservationField label="Describa la discapacidad" fieldName="nna_descripcion_discapacidad_otra" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
                       <textarea className="input-field" rows={3} value={datosNNA.descripcion_discapacidad_otra || ''} onChange={e => setDatosNNA({...datosNNA, descripcion_discapacidad_otra: e.target.value})} placeholder="Describa el tipo de discapacidad..." />
-                    </div>
+                    </ObservationField>
                   )}
                 </>
               )}
+              <SectionObservation label="Observaciones" fieldName="nna_discapacidad" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
               <h3 className="form-section-title">Grupo Étnico</h3>
-              <RadioGroupWithOtro options={T.GRUPOS_ETNICOS} value={datosNNA.grupo_etnico || null} onChange={v => setDatosNNA({...datosNNA, grupo_etnico: v || ''})} />
-              {datosNNA.grupo_etnico === 'Indígena' && (
+              <div className="input-group">
+                <label>Grupo Étnico</label>
+                <RadioGroupWithOtro options={T.GRUPOS_ETNICOS} value={datosNNA.grupo_etnico || null} onChange={v => setDatosNNA({...datosNNA, grupo_etnico: v || '', pueblo_indigena: v?.startsWith('Indígena') ? datosNNA.pueblo_indigena : '', resguardo: v?.startsWith('Indígena') ? datosNNA.resguardo : ''})} />
+              </div>
+              {(datosNNA.grupo_etnico === 'Indígena' || (datosNNA.grupo_etnico && datosNNA.grupo_etnico.startsWith('Indígena'))) && (
                 <div style={{ marginTop: 'var(--space-4)' }}>
-                  <div className="input-group">
+                  <div className="input-group" style={{ marginBottom: 'var(--space-4)' }}>
                     <label>Pueblo Indígena</label>
                     <RadioGroupWithOtro options={T.PUEBLOS_INDIGENAS} value={datosNNA.pueblo_indigena || null} onChange={v => setDatosNNA({...datosNNA, pueblo_indigena: v || ''})} />
                   </div>
-                  <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
-                    <label>Resguardo al que pertenece</label>
+                  <div className="input-group">
+                    <label>Resguardo</label>
                     <input className="input-field" value={datosNNA.resguardo || ''} onChange={e => setDatosNNA({...datosNNA, resguardo: e.target.value})} placeholder="Nombre del resguardo..." />
                   </div>
                 </div>
               )}
+              <SectionObservation label="Observaciones" fieldName="nna_grupo_etnico" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
+            </div>
+            <div className="form-section">
+              <h3 className="form-section-title">2. Objetivo de la Verificación</h3>
+              <div className="input-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label>Descripción del Objetivo</label>
+                  <button 
+                    type="button" 
+                    className="btn btn-tertiary" 
+                    style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                    onClick={() => {
+                      const nombre = `${datosNNA.nombres || ''} ${datosNNA.apellidos || ''}`.trim() || '[Nombre del NNA]';
+                      const asunto = entrevista.asunto || '[Asunto/Vulneración]';
+                      const text = `Verificar la garantía, el estado de protección y la posible vulneración de los derechos fundamentales del NNA ${nombre} presuntamente víctima de ${asunto}, mediante la valoración integral del contexto familiar, social y de cuidado, con el fin de identificar factores de riesgo y de protección, y aportar elementos técnicos que orienten la adopción de medidas administrativas inmediatas y pertinentes para el restablecimiento de derechos, conforme al interés superior del NNA y la normatividad vigente. `;
+                      setEntrevista({...entrevista, objetivo_verificacion: text});
+                    }}
+                  >
+                    🪄 Generar Automático
+                  </button>
+                </div>
+                <textarea 
+                  className="input-field" 
+                  rows={6} 
+                  value={entrevista.objetivo_verificacion || ''} 
+                  onChange={e => setEntrevista({...entrevista, objetivo_verificacion: e.target.value})} 
+                  placeholder="Escriba el objetivo de la verificación..."
+                />
+              </div>
+              <SectionObservation label="Observaciones" fieldName="objetivo_verificacion" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
+            </div>
+
+            <div className="form-section">
+              <h3 className="form-section-title">3. Metodología e Instrumentos Utilizados</h3>
+              <div className="input-group">
+                <label>Instrumentos y Metodología aplicada en la verificación</label>
+                {(() => {
+                  let items: { instrumento: string, descripcion: string }[] = [];
+                  try {
+                    const parsed = JSON.parse(analisis.metodologia_instrumentos || '[]');
+                    if (Array.isArray(parsed)) items = parsed;
+                  } catch {}
+                  const updateRow = (index: number, field: 'instrumento' | 'descripcion', value: string) => {
+                    const newItems = [...items];
+                    newItems[index][field] = value;
+                    setAnalisis({ ...analisis, metodologia_instrumentos: JSON.stringify(newItems) });
+                  };
+                  const removeRow = (index: number) => {
+                    const newItems = items.filter((_, i) => i !== index);
+                    setAnalisis({ ...analisis, metodologia_instrumentos: JSON.stringify(newItems) });
+                  };
+                  const addRow = () => {
+                    const newItems = [...items, { instrumento: '', descripcion: '' }];
+                    setAnalisis({ ...analisis, metodologia_instrumentos: JSON.stringify(newItems) });
+                  };
+                  return (
+                    <div style={{ width: '100%', marginTop: '0.5rem' }}>
+                      <div className={styles.matrixContainer}>
+                        <table className={styles.matrixTable}>
+                          <thead>
+                            <tr>
+                              <th style={{ width: '30%' }}>Instrumento</th>
+                              <th>Descripción / Aplicación</th>
+                              <th style={{ width: '50px' }}></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {items.length === 0 && (
+                              <tr>
+                                <td colSpan={3} style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--on-surface-variant)', fontStyle: 'italic' }}>
+                                  No se han registrado instrumentos. Añada uno para comenzar.
+                                </td>
+                              </tr>
+                            )}
+                            {items.map((item, i) => (
+                              <tr key={i}>
+                                <td className={styles.matrixCell}>
+                                  <textarea className={styles.matrixInput} style={{ minHeight: '60px' }} value={item.instrumento} onChange={e => updateRow(i, 'instrumento', e.target.value)} placeholder="Ej: Entrevista" />
+                                </td>
+                                <td className={styles.matrixCell}>
+                                  <textarea className={styles.matrixInput} style={{ minHeight: '60px' }} value={item.descripcion} onChange={e => updateRow(i, 'descripcion', e.target.value)} placeholder="Descripción..." />
+                                </td>
+                                <td className={styles.matrixCell}>
+                                  <button type="button" onClick={() => removeRow(i)} className={styles.removeRowBtn}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <button type="button" onClick={addRow} className="btn btn-secondary" style={{ marginTop: '1rem', gap: '8px' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Añadir Instrumento
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
+              <SectionObservation label="Observaciones" fieldName="analisis_metodologia" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
+            </div>
+
+            <div className="form-section">
+              <h3 className="form-section-title">4. Información del Presunto Agresor</h3>
+              <div className="form-row">
+                <div className="input-group">
+                  <label>Nombre Completo</label>
+                  <input className="input-field" value={datosAgresor.nombre || ''} onChange={e => setDatosAgresor({...datosAgresor, nombre: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Edad</label>
+                  <input className="input-field" value={datosAgresor.edad || ''} onChange={e => setDatosAgresor({...datosAgresor, edad: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Lugar de Residencia</label>
+                  <input className="input-field" value={datosAgresor.lugar_residencia || ''} onChange={e => setDatosAgresor({...datosAgresor, lugar_residencia: e.target.value})} />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="input-group">
+                  <label>Ocupación</label>
+                  <input className="input-field" value={datosAgresor.ocupacion || ''} onChange={e => setDatosAgresor({...datosAgresor, ocupacion: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Grupo Poblacional</label>
+                  <input className="input-field" value={datosAgresor.grupo_poblacional_enfoque_diferencial || ''} onChange={e => setDatosAgresor({...datosAgresor, grupo_poblacional_enfoque_diferencial: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Parentesco con NNA</label>
+                  <input className="input-field" value={datosAgresor.parentesco || ''} onChange={e => setDatosAgresor({...datosAgresor, parentesco: e.target.value})} />
+                </div>
+              </div>
+              <SectionObservation label="Observaciones" fieldName="agresor_info" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
           </div>
         )}
 
         {step === 2 && (
           <div className="animate-slide-up">
-            <h2 className={styles.stepTitle}>Condiciones Habitacionales y de Salud</h2>
+            <h2 className={styles.stepTitle}>Condiciones Habitacionales y Desarrollo</h2>
             <div className="form-section">
-              <h3 className="form-section-title">Habitabilidad del NNA</h3>
+              <h3 className="form-section-title">Higiene y Descanso</h3>
               <div className="input-group">
-                <label>Lugar de Descanso</label>
+                <label>Donde duerme el NNA</label>
                 <RadioGroupWithOtro options={T.LUGARES_DESCANSO} value={condiciones.lugar_descanso || null} onChange={v => setCondiciones({...condiciones, lugar_descanso: v || ''})} />
               </div>
               <div className="form-row" style={{ marginTop: 'var(--space-4)' }}>
-                <BooleanSelect label="¿Duerme con adultos en la misma habitación?" value={condiciones.duerme_con_adultos_habitacion ?? null} onChange={v => setCondiciones({...condiciones, duerme_con_adultos_habitacion: v})} />
-                <BooleanSelect label="¿Duerme con adultos en la misma cama?" value={condiciones.duerme_con_adultos_cama ?? null} onChange={v => setCondiciones({...condiciones, duerme_con_adultos_cama: v})} />
+                <div className="input-group">
+                  <label>¿Duerme con adultos en la misma habitación?</label>
+                  <BooleanGroup value={condiciones.duerme_con_adultos_habitacion ?? null} onChange={v => setCondiciones({...condiciones, duerme_con_adultos_habitacion: v})} />
+                </div>
+                <div className="input-group">
+                  <label>¿Duerme con adultos en la misma cama?</label>
+                  <BooleanGroup value={condiciones.duerme_con_adultos_cama ?? null} onChange={v => setCondiciones({...condiciones, duerme_con_adultos_cama: v})} />
+                </div>
               </div>
+              <SectionObservation label="Observaciones" fieldName="cond_higiene_descanso" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
-              <h3 className="form-section-title">Salud y Prevención</h3>
+<h3 className="form-section-title">Salud y Prevención</h3>
               <div className="form-row">
                 <div className="input-group">
                   <label>Afiliación a Salud</label>
@@ -614,32 +1056,46 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                     <button type="button" className={`chip ${condiciones.afiliacion_salud === 'no_afiliado' ? 'chip-selected' : 'chip-unselected'}`} onClick={() => setCondiciones({...condiciones, afiliacion_salud: 'no_afiliado'})}>No Afiliado</button>
                   </div>
                 </div>
-                <div className="input-group"><label>EPS</label><input className="input-field" value={condiciones.eps || ''} onChange={e => setCondiciones({...condiciones, eps: e.target.value})} /></div>
+                <div className="input-group">
+                  <label>EPS</label>
+                  <input className="input-field" value={condiciones.eps || ''} onChange={e => setCondiciones({...condiciones, eps: e.target.value})} />
+                </div>
               </div>
               {condiciones.afiliacion_salud === 'no_afiliado' && (
-                <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
-                  <label>Motivo de No Afiliación</label>
+                <ObservationField label="Motivo de No Afiliación" fieldName="cond_motivo_no_afiliacion" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
                   <RadioGroupWithOtro options={T.MOTIVOS_NO_AFILIACION} value={condiciones.motivo_no_afiliacion || null} onChange={v => setCondiciones({...condiciones, motivo_no_afiliacion: v || ''})} />
-                </div>
+                </ObservationField>
               )}
               <div className="form-row" style={{ marginTop: 'var(--space-4)' }}>
-                <BooleanSelect label="Esquema de Vacunación Completo" value={condiciones.vacunacion_completa ?? null} onChange={v => setCondiciones({...condiciones, vacunacion_completa: v})} />
-                <BooleanSelect label="Atención Odontológica" value={condiciones.atencion_odontologica ?? null} onChange={v => setCondiciones({...condiciones, atencion_odontologica: v})} />
-                <BooleanSelect label="Valoración Integral del Desarrollo" value={condiciones.valoracion_desarrollo ?? null} onChange={v => setCondiciones({...condiciones, valoracion_desarrollo: v})} />
+                <div className="input-group">
+                  <label>Esquema de Vacunación Completo</label>
+                  <BooleanGroup value={condiciones.vacunacion_completa ?? null} onChange={v => setCondiciones({...condiciones, vacunacion_completa: v})} />
+                </div>
+                <div className="input-group">
+                  <label>Atención Odontológica</label>
+                  <BooleanGroup value={condiciones.atencion_odontologica ?? null} onChange={v => setCondiciones({...condiciones, atencion_odontologica: v})} />
+                </div>
               </div>
+              <div className="input-group">
+                <label>Valoración Integral del Desarrollo</label>
+                <BooleanGroup value={condiciones.valoracion_desarrollo ?? null} onChange={v => setCondiciones({...condiciones, valoracion_desarrollo: v})} />
+              </div>
+<SectionObservation label="Observaciones" fieldName="cond_salud_prevencion" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
-              <h3 className="form-section-title">Alimentación y Nutrición</h3>
+              <h3 className="form-section-title">6. Alimentación y Nutrición</h3>
               {(datosNNA.edad === null || datosNNA.edad === undefined || datosNNA.edad <= 2) && (
                 <>
-                  <BooleanSelect label="¿Recibe leche materna?" value={condiciones.recibe_leche_materna ?? null} onChange={v => setCondiciones({...condiciones, recibe_leche_materna: v})} />
+                  <div className="input-group">
+                    <label>¿Recibe leche materna?</label>
+                    <BooleanGroup value={condiciones.recibe_leche_materna ?? null} onChange={v => setCondiciones({...condiciones, recibe_leche_materna: v})} />
+                  </div>
                   {condiciones.recibe_leche_materna === false && (
-                    <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
-                      <label>Motivo de Suspensión</label>
+                    <ObservationField label="Motivo de Suspensión" fieldName="cond_motivo_suspension_lactancia" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
                       <RadioGroupWithOtro options={T.MOTIVOS_SUSPENSION_LACTANCIA} value={condiciones.motivo_suspension_lactancia || null} onChange={v => setCondiciones({...condiciones, motivo_suspension_lactancia: v || ''})} />
-                    </div>
+                    </ObservationField>
                   )}
-                  <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
+                  <div className="input-group">
                     <label>Edad de inicio de alimentación complementaria (meses)</label>
                     <input type="number" className="input-field" value={condiciones.edad_inicio_alimentacion ?? ''} onChange={e => setCondiciones({...condiciones, edad_inicio_alimentacion: e.target.value ? Number(e.target.value) : null})} />
                   </div>
@@ -652,31 +1108,44 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                       <label>¿Cuántas comidas recibe al día?</label>
                       <input type="number" className="input-field" min={1} max={10} value={condiciones.comidas_al_dia ?? ''} onChange={e => setCondiciones({...condiciones, comidas_al_dia: e.target.value ? Number(e.target.value) : null})} placeholder="Ej: 3" />
                     </div>
+                    <div className="input-group">
+                      <label>¿Tiene horarios regulares de alimentación?</label>
+                      <BooleanGroup value={condiciones.tiene_horario_alimentacion ?? null} onChange={v => setCondiciones({...condiciones, tiene_horario_alimentacion: v})} />
+                    </div>
                   </div>
-                  <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
-                    <label>¿Qué comidas recibe habitualmente?</label>
+                  <ObservationField label="¿Qué comidas recibe habitualmente?" fieldName="cond_que_comidas" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
                     <ChipSelector options={T.TIPOS_ALIMENTACION} selected={condiciones.tipo_alimentacion as string[] || []} onChange={v => setCondiciones({...condiciones, tipo_alimentacion: v})} />
-                  </div>
+                  </ObservationField>
                   <div style={{ marginTop: 'var(--space-4)' }}>
                     <label className="label-lg" style={{ marginBottom: 'var(--space-3)', display: 'block' }}>Consumo de Grupos Alimenticios</label>
                     <div className="form-row">
-                      <BooleanSelect label="¿Consume frutas y verduras regularmente?" value={condiciones.consume_frutas_verduras ?? null} onChange={v => setCondiciones({...condiciones, consume_frutas_verduras: v})} />
-                      <BooleanSelect label="¿Consume proteínas (carne, huevo, legumbres)?" value={condiciones.consume_proteinas ?? null} onChange={v => setCondiciones({...condiciones, consume_proteinas: v})} />
+                      <div className="input-group">
+                        <label>¿Consume frutas y verduras regularmente?</label>
+                        <BooleanGroup value={condiciones.consume_frutas_verduras ?? null} onChange={v => setCondiciones({...condiciones, consume_frutas_verduras: v})} />
+                      </div>
+                      <div className="input-group">
+                        <label>¿Consume proteínas (carne, huevo, legumbres)?</label>
+                        <BooleanGroup value={condiciones.consume_proteinas ?? null} onChange={v => setCondiciones({...condiciones, consume_proteinas: v})} />
+                      </div>
                     </div>
                     <div className="form-row" style={{ marginTop: 'var(--space-3)' }}>
-                      <BooleanSelect label="¿Consume lácteos (leche, queso, yogur)?" value={condiciones.consume_lacteos ?? null} onChange={v => setCondiciones({...condiciones, consume_lacteos: v})} />
-                      <BooleanSelect label="¿Toma suficiente agua al día?" value={condiciones.consume_agua_suficiente ?? null} onChange={v => setCondiciones({...condiciones, consume_agua_suficiente: v})} />
+                      <div className="input-group">
+                        <label>¿Consume lácteos (leche, queso, yogur)?</label>
+                        <BooleanGroup value={condiciones.consume_lacteos ?? null} onChange={v => setCondiciones({...condiciones, consume_lacteos: v})} />
+                      </div>
+                      <div className="input-group">
+                        <label>¿Toma suficiente agua al día?</label>
+                        <BooleanGroup value={condiciones.consume_agua_suficiente ?? null} onChange={v => setCondiciones({...condiciones, consume_agua_suficiente: v})} />
+                      </div>
                     </div>
                   </div>
-                  <div className="form-row" style={{ marginTop: 'var(--space-4)' }}>
-                    <BooleanSelect label="¿Tiene horarios regulares de alimentación?" value={condiciones.tiene_horario_alimentacion ?? null} onChange={v => setCondiciones({...condiciones, tiene_horario_alimentacion: v})} />
-                  </div>
                   <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
-                    <label>Observaciones sobre la nutrición del NNA</label>
-                    <textarea className="input-field" rows={3} value={condiciones.observaciones_nutricion || ''} onChange={e => setCondiciones({...condiciones, observaciones_nutricion: e.target.value})} placeholder="Estado nutricional observado, señales de desnutrición, sobrepeso, etc." />
+                    <label>Observaciones sobre la nutrición</label>
+                    <textarea className="input-field" rows={3} value={condiciones.observaciones_nutricion || ''} onChange={e => setCondiciones({...condiciones, observaciones_nutricion: e.target.value})} placeholder="Estado nutricional observado..." />
                   </div>
                 </>
               )}
+              <SectionObservation label="Observaciones" fieldName="cond_alimentacion" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
           </div>
         )}
@@ -693,40 +1162,57 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                     <button type="button" className="btn btn-tertiary" onClick={() => removeIntegrante(i)} style={{ color: 'var(--error)', fontSize: '0.8125rem' }}>Eliminar</button>
                   </div>
                   <div className="form-row">
-                    <div className="input-group"><label>Nombre</label><input className="input-field" value={ig.nombre || ''} onChange={e => updateIntegrante(i, 'nombre', e.target.value)} /></div>
-                    <div className="input-group">
-                      <label>Parentesco</label>
+                    <ObservationField label="Nombre" fieldName={`intg_${i}_nombre`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
+                      <input className="input-field" value={ig.nombre || ''} onChange={e => updateIntegrante(i, 'nombre', e.target.value)} />
+                    </ObservationField>
+                    <ObservationField label="Parentesco" fieldName={`intg_${i}_parentesco`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
                       <select className="input-field" value={ig.parentesco || ''} onChange={e => updateIntegrante(i, 'parentesco', e.target.value)}>
                         <option value="">Seleccione...</option>
                         {T.PARENTESCOS.map(p => <option key={p} value={p}>{p}</option>)}
                       </select>
-                    </div>
+                    </ObservationField>
                   </div>
                   <div className="form-row">
-                    <div className="input-group"><label>Documento</label><input className="input-field" value={ig.numero_documento || ''} onChange={e => updateIntegrante(i, 'numero_documento', e.target.value)} /></div>
-                    <div className="input-group"><label>Fecha de Nacimiento</label><input type="date" className="input-field" value={ig.fecha_nacimiento || ''} onChange={e => updateIntegrante(i, 'fecha_nacimiento', e.target.value)} /></div>
-                    <div className="input-group"><label>Edad</label><input type="number" className="input-field" value={ig.edad ?? ''} onChange={e => updateIntegrante(i, 'edad', e.target.value ? Number(e.target.value) : null)} /></div>
-                    <div className="input-group">
-                      <label>Sexo</label>
+                    <ObservationField label="Documento" fieldName={`intg_${i}_doc`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
+                      <input className="input-field" value={ig.numero_documento || ''} onChange={e => updateIntegrante(i, 'numero_documento', e.target.value)} />
+                    </ObservationField>
+                    <ObservationField label="Fecha de Nacimiento" fieldName={`intg_${i}_fecha_nac`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
+                      <input type="date" className="input-field" value={ig.fecha_nacimiento || ''} onChange={e => updateIntegrante(i, 'fecha_nacimiento', e.target.value)} />
+                    </ObservationField>
+                    <ObservationField label="Edad" fieldName={`intg_${i}_edad`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
+                      <input type="number" className="input-field" value={ig.edad ?? ''} onChange={e => updateIntegrante(i, 'edad', e.target.value ? Number(e.target.value) : null)} />
+                    </ObservationField>
+                    <ObservationField label="Sexo" fieldName={`intg_${i}_sexo`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
                       <select className="input-field" value={ig.sexo || ''} onChange={e => updateIntegrante(i, 'sexo', e.target.value)}>
                         <option value="">Seleccione...</option>
                         {T.SEXOS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                       </select>
-                    </div>
+                    </ObservationField>
                   </div>
                   <div className="form-row">
-                    <div className="input-group"><label>Nivel de Escolaridad</label><input className="input-field" value={ig.nivel_escolaridad || ''} onChange={e => updateIntegrante(i, 'nivel_escolaridad', e.target.value)} /></div>
-                    <div className="input-group"><label>Actividad Principal</label><input className="input-field" value={ig.actividad_principal || ''} onChange={e => updateIntegrante(i, 'actividad_principal', e.target.value)} /></div>
-                    <div className="input-group"><label>Ingresos</label><input type="number" className="input-field" value={ig.ingresos ?? ''} onChange={e => updateIntegrante(i, 'ingresos', e.target.value ? Number(e.target.value) : null)} /></div>
+                    <ObservationField label="Nivel de Escolaridad" fieldName={`intg_${i}_escolaridad`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
+                      <input className="input-field" value={ig.nivel_escolaridad || ''} onChange={e => updateIntegrante(i, 'nivel_escolaridad', e.target.value)} />
+                    </ObservationField>
+                    <ObservationField label="Actividad Principal" fieldName={`intg_${i}_actividad`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
+                      <input className="input-field" value={ig.actividad_principal || ''} onChange={e => updateIntegrante(i, 'actividad_principal', e.target.value)} />
+                    </ObservationField>
+                    <ObservationField label="Ingresos" fieldName={`intg_${i}_ingresos`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
+                      <input type="number" className="input-field" value={ig.ingresos ?? ''} onChange={e => updateIntegrante(i, 'ingresos', e.target.value ? Number(e.target.value) : null)} />
+                    </ObservationField>
                   </div>
                   <div className="form-row">
-                    <div className="input-group"><label>Estado Civil</label><input className="input-field" value={ig.estado_civil || ''} onChange={e => updateIntegrante(i, 'estado_civil', e.target.value)} placeholder="Ej: Soltero(a), Casado(a)" /></div>
-                    <div className="input-group"><label>Contacto (Número de celular)</label><input className="input-field" type="tel" value={ig.contacto || ''} onChange={e => updateIntegrante(i, 'contacto', e.target.value)} placeholder="Ej: 3001234567" /></div>
+                    <ObservationField label="Estado Civil" fieldName={`intg_${i}_estado_civil`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
+                      <input className="input-field" value={ig.estado_civil || ''} onChange={e => updateIntegrante(i, 'estado_civil', e.target.value)} placeholder="Ej: Soltero(a), Casado(a)" />
+                    </ObservationField>
+                    <ObservationField label="Contacto" fieldName={`intg_${i}_contacto`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
+                      <input className="input-field" type="tel" value={ig.contacto || ''} onChange={e => updateIntegrante(i, 'contacto', e.target.value)} placeholder="Ej: 3001234567" />
+                    </ObservationField>
                   </div>
                   <div className="form-row">
-                    <div className="input-group"><label>EPS</label><input className="input-field" value={ig.eps || ''} onChange={e => updateIntegrante(i, 'eps', e.target.value)} placeholder="Ej: Sanitas, Sura..." /></div>
-                    <div className="input-group">
-                      <label>Régimen de Salud</label>
+                    <ObservationField label="EPS" fieldName={`intg_${i}_eps`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
+                      <input className="input-field" value={ig.eps || ''} onChange={e => updateIntegrante(i, 'eps', e.target.value)} placeholder="Ej: Sanitas, Sura..." />
+                    </ObservationField>
+                    <ObservationField label="Régimen de Salud" fieldName={`intg_${i}_regimen`} observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
                       <select className="input-field" value={ig.regimen_salud || ''} onChange={e => updateIntegrante(i, 'regimen_salud', e.target.value)}>
                         <option value="">Seleccione...</option>
                         <option value="Subsidiado">Subsidiado</option>
@@ -734,7 +1220,7 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                         <option value="Especial/Excepción">Especial/Excepción</option>
                         <option value="No afiliado">No afiliado</option>
                       </select>
-                    </div>
+                    </ObservationField>
                   </div>
                 </div>
               ))}
@@ -749,42 +1235,23 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 <label>Criterio de Liderazgo Familiar</label>
                 <RadioGroupWithOtro options={T.CRITERIOS_LIDERAZGO} value={dinamica.criterio_liderazgo || null} onChange={v => setDinamica({...dinamica, criterio_liderazgo: v || ''})} />
               </div>
-              <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
+              <div className="input-group">
                 <label>Vínculo Afectivo Más Fuerte</label>
                 <RadioGroupWithOtro options={T.VINCULOS_AFECTIVOS} value={dinamica.vinculo_afectivo_fuerte || null} onChange={v => setDinamica({...dinamica, vinculo_afectivo_fuerte: v || ''})} />
               </div>
-              <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
+              <div className="input-group">
                 <label>Actividades Familiares</label>
                 <ChipSelector options={T.ACTIVIDADES_FAMILIARES} selected={dinamica.actividades_familiares as string[] || []} onChange={v => setDinamica({...dinamica, actividades_familiares: v})} />
               </div>
-              <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
+              <div className="input-group">
                 <label>Métodos de Corrección</label>
                 <ChipSelector options={T.METODOS_CORRECCION} selected={dinamica.metodos_correccion as string[] || []} onChange={v => setDinamica({...dinamica, metodos_correccion: v})} />
               </div>
-              <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
+              <div className="input-group">
                 <label>¿Quién Corrige?</label>
                 <input className="input-field" value={dinamica.quien_corrige || ''} onChange={e => setDinamica({...dinamica, quien_corrige: e.target.value})} placeholder="Nombre o parentesco..." />
               </div>
-            </div>
-            <div className="form-section">
-              <h3 className="form-section-title">Genograma Familiar</h3>
-              <p style={{ color: 'var(--on-surface-variant)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                Utilice esta herramienta interactiva para construir el genograma familiar. Añada hombres (cuadrados) o mujeres (círculos), haga clic en ellos para editar su nombre, enfermedades u ocupación, y trace las relaciones conectando sus puntos. Ajuste los estilos de línea seleccionándola.
-              </p>
-              <div style={{ height: '600px', borderRadius: '8px', border: '1px solid var(--outline-variant)', overflow: 'hidden' }}>
-                <GenogramaEditor 
-                  initialNodes={entrevista.genograma_data?.nodes || []}
-                  initialEdges={entrevista.genograma_data?.edges || []}
-                  onChange={(nodes, edges, b64) => setEntrevista(prev => ({ 
-                    ...prev, 
-                    genograma_data: { 
-                      nodes, 
-                      edges, 
-                      imagen_base64: b64 || prev.genograma_data?.imagen_base64 
-                    } 
-                  }))}
-                />
-              </div>
+              <SectionObservation label="Observaciones" fieldName="dinamica_relacional" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
           </div>
         )}
@@ -794,11 +1261,19 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
             <h2 className={styles.stepTitle}>Vulnerabilidad y Entorno</h2>
             <div className="form-section">
               <h3 className="form-section-title">Eventos de Violencia en el Hogar</h3>
-              <ChipSelector options={T.EVENTOS_VIOLENCIA} selected={vulnerabilidad.eventos_violencia as string[] || []} onChange={v => setVulnerabilidad({...vulnerabilidad, eventos_violencia: v})} />
+              <div className="input-group">
+                <label>Eventos de Violencia</label>
+                <ChipSelector options={T.EVENTOS_VIOLENCIA} selected={vulnerabilidad.eventos_violencia as string[] || []} onChange={v => setVulnerabilidad({...vulnerabilidad, eventos_violencia: v})} />
+              </div>
+              <SectionObservation label="Observaciones" fieldName="vuln_violencia" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
               <h3 className="form-section-title">Redes de Apoyo</h3>
-              <ChipSelector options={T.REDES_APOYO} selected={vulnerabilidad.redes_apoyo as string[] || []} onChange={v => setVulnerabilidad({...vulnerabilidad, redes_apoyo: v})} />
+              <div className="input-group">
+                <label>Redes de Apoyo</label>
+                <ChipSelector options={T.REDES_APOYO} selected={vulnerabilidad.redes_apoyo as string[] || []} onChange={v => setVulnerabilidad({...vulnerabilidad, redes_apoyo: v})} />
+              </div>
+              <SectionObservation label="Observaciones" fieldName="vuln_redes" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
               <h3 className="form-section-title">Características de la Vivienda</h3>
@@ -806,14 +1281,15 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 <label>Ubicación</label>
                 <RadioGroupWithOtro options={T.UBICACIONES_VIVIENDA} value={vulnerabilidad.ubicacion_vivienda || null} onChange={v => setVulnerabilidad({...vulnerabilidad, ubicacion_vivienda: v || ''})} />
               </div>
-              <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
+              <div className="input-group">
                 <label>Tipo de Vivienda</label>
                 <RadioGroupWithOtro options={T.TIPOS_VIVIENDA} value={vulnerabilidad.tipo_vivienda || null} onChange={v => setVulnerabilidad({...vulnerabilidad, tipo_vivienda: v || ''})} />
               </div>
-              <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
+              <div className="input-group">
                 <label>Servicios Públicos</label>
                 <ChipSelector options={T.SERVICIOS_PUBLICOS} selected={vulnerabilidad.servicios_publicos as string[] || []} onChange={v => setVulnerabilidad({...vulnerabilidad, servicios_publicos: v})} />
               </div>
+              <SectionObservation label="Observaciones" fieldName="vuln_vivienda" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
           </div>
         )}
@@ -824,7 +1300,10 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
             <div className="form-section">
               <h3 className="form-section-title">Perfil del Cuidador</h3>
               <div className="form-row">
-                <div className="input-group"><label>Nombre</label><input className="input-field" value={cuidador.nombre || ''} onChange={e => setCuidador({...cuidador, nombre: e.target.value})} /></div>
+                <div className="input-group">
+                  <label>Nombre</label>
+                  <input className="input-field" value={cuidador.nombre || ''} onChange={e => setCuidador({...cuidador, nombre: e.target.value})} />
+                </div>
                 <div className="input-group">
                   <label>Tipo de Parentesco</label>
                   <div className="radio-group">
@@ -833,30 +1312,51 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
                 </div>
               </div>
               <div className="form-row">
-                <div className="input-group"><label>Edad</label><input type="number" className="input-field" value={cuidador.edad ?? ''} onChange={e => setCuidador({...cuidador, edad: e.target.value ? Number(e.target.value) : null})} /></div>
-                <div className="input-group"><label>Actividad Principal</label><input className="input-field" value={cuidador.actividad_principal || ''} onChange={e => setCuidador({...cuidador, actividad_principal: e.target.value})} /></div>
+                <div className="input-group">
+                  <label>Edad</label>
+                  <input type="number" className="input-field" value={cuidador.edad ?? ''} onChange={e => setCuidador({...cuidador, edad: e.target.value ? Number(e.target.value) : null})} />
+                </div>
+                <div className="input-group">
+                  <label>Actividad Principal</label>
+                  <input className="input-field" value={cuidador.actividad_principal || ''} onChange={e => setCuidador({...cuidador, actividad_principal: e.target.value})} />
+                </div>
               </div>
+              <SectionObservation label="Observaciones" fieldName="cuidador_perfil" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
               <h3 className="form-section-title">Tiempo e Interacción</h3>
               <div className="form-row">
-                <div className="input-group"><label>Horas diarias de cuidado</label><input type="number" className="input-field" value={cuidador.horas_cuidado_diario ?? ''} onChange={e => setCuidador({...cuidador, horas_cuidado_diario: e.target.value ? Number(e.target.value) : null})} /></div>
-                <BooleanSelect label="¿El NNA queda solo?" value={cuidador.nna_queda_solo ?? null} onChange={v => setCuidador({...cuidador, nna_queda_solo: v})} />
+                <div className="input-group">
+                  <label>Horas diarias de cuidado</label>
+                  <input type="number" className="input-field" value={cuidador.horas_cuidado_diario ?? ''} onChange={e => setCuidador({...cuidador, horas_cuidado_diario: e.target.value ? Number(e.target.value) : null})} />
+                </div>
+                <div className="input-group">
+                  <label>¿El NNA queda solo?</label>
+                  <BooleanGroup value={cuidador.nna_queda_solo ?? null} onChange={v => setCuidador({...cuidador, nna_queda_solo: v})} />
+                </div>
               </div>
               {cuidador.nna_queda_solo && (
-                <div className="input-group" style={{ marginTop: 'var(--space-4)' }}>
-                  <label>¿Cuánto tiempo queda solo?</label>
+                <ObservationField label="¿Cuánto tiempo queda solo?" fieldName="cuid_tiempo_solo" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote}>
                   <input className="input-field" value={cuidador.tiempo_solo || ''} onChange={e => setCuidador({...cuidador, tiempo_solo: e.target.value})} placeholder="Ej: 2 horas al día" />
-                </div>
+                </ObservationField>
               )}
+              <SectionObservation label="Observaciones" fieldName="cuidador_tiempo" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
               <h3 className="form-section-title">Actividades (últimos 3 días)</h3>
-              <ChipSelector options={T.ESTIMULOS_3_DIAS} selected={cuidador.estimulos_3_dias as string[] || []} onChange={v => setCuidador({...cuidador, estimulos_3_dias: v})} />
+              <div className="input-group">
+                <label>Actividades Realizadas</label>
+                <ChipSelector options={T.ESTIMULOS_3_DIAS} selected={cuidador.estimulos_3_dias as string[] || []} onChange={v => setCuidador({...cuidador, estimulos_3_dias: v})} />
+              </div>
+              <SectionObservation label="Observaciones" fieldName="cuidador_actividades" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
               <h3 className="form-section-title">Reconocimiento</h3>
-              <ChipSelector options={T.RECONOCIMIENTOS} selected={cuidador.reconocimiento as string[] || []} onChange={v => setCuidador({...cuidador, reconocimiento: v})} />
+              <div className="input-group">
+                <label>Reconocimientos</label>
+                <ChipSelector options={T.RECONOCIMIENTOS} selected={cuidador.reconocimiento as string[] || []} onChange={v => setCuidador({...cuidador, reconocimiento: v})} />
+              </div>
+              <SectionObservation label="Observaciones" fieldName="cuidador_reconocimiento" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
           </div>
         )}
@@ -865,74 +1365,172 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
           <div className="animate-slide-up">
             <h2 className={styles.stepTitle}>Análisis Social y Conclusiones</h2>
             <div className="form-section">
-              <h3 className="form-section-title">Metodología e Instrumentos Utilizados</h3>
-              {(() => {
-                let items: { instrumento: string, descripcion: string }[] = [];
-                try {
-                  const parsed = JSON.parse(analisis.metodologia_instrumentos || '[]');
-                  if (Array.isArray(parsed)) items = parsed;
-                } catch {}
-                const updateRow = (index: number, field: 'instrumento' | 'descripcion', value: string) => {
-                  const newItems = [...items];
-                  newItems[index][field] = value;
-                  setAnalisis({ ...analisis, metodologia_instrumentos: JSON.stringify(newItems) });
-                };
-                const removeRow = (index: number) => {
-                  const newItems = items.filter((_, i) => i !== index);
-                  setAnalisis({ ...analisis, metodologia_instrumentos: JSON.stringify(newItems) });
-                };
-                const addRow = () => {
-                  const newItems = [...items, { instrumento: '', descripcion: '' }];
-                  setAnalisis({ ...analisis, metodologia_instrumentos: JSON.stringify(newItems) });
-                };
-                return (
-                  <div>
-                    {items.length > 0 && (
-                      <table className="data-table" style={{ marginTop: '0', width: '100%', marginBottom: '1rem' }}>
-                        <thead>
-                          <tr>
-                            <th style={{ width: '30%', fontSize: '0.875rem', color: 'var(--on-surface)' }}>Instrumentos aplicados</th>
-                            <th style={{ fontSize: '0.875rem', color: 'var(--on-surface)' }}>Descripción</th>
-                            <th style={{ width: '50px' }}></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {items.map((item, i) => (
-                            <tr key={i}>
-                              <td style={{ padding: '0', background: 'var(--surface-container-low)' }}>
-                                <textarea className="input-field" style={{ minHeight: '80px', borderRadius: '0' }} placeholder="Ejem: Entrevista semi-estructurada" value={item.instrumento} onChange={e => updateRow(i, 'instrumento', e.target.value)} />
-                              </td>
-                              <td style={{ padding: '0' }}>
-                                <textarea className="input-field" style={{ minHeight: '80px', borderRadius: '0' }} placeholder="Descripción..." value={item.descripcion} onChange={e => updateRow(i, 'descripcion', e.target.value)} />
-                              </td>
-                              <td style={{ textAlign: 'center' }}>
-                                <button type="button" onClick={() => removeRow(i)} className="btn btn-tertiary" style={{ color: 'var(--error)' }}>✕</button>
-                              </td>
+              <h3 className="form-section-title">11. Análisis Social y Conclusiones</h3>
+
+            <div className="form-section">
+              <h4 className="form-section-title" style={{ fontSize: '1.1rem', opacity: 0.9 }}>11.1 Manifestaciones o situación actual del NNA</h4>
+              <div className="input-group">
+                <textarea className="input-field" rows={4} value={analisis.manifestaciones_nna || ''} onChange={e => setAnalisis({...analisis, manifestaciones_nna: e.target.value})} placeholder="Manifestaciones del niño, niña o adolescente..." />
+              </div>
+              <SectionObservation label="Observaciones" fieldName="analisis_manifestaciones" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
+            </div>
+
+            <div className="form-section">
+              <h4 className="form-section-title" style={{ fontSize: '1.1rem', opacity: 0.9 }}>11.2 Matriz de Vulneración de Derechos Identificados</h4>
+              <div className="form-row" style={{ overflowX: 'auto' }}>
+                {(() => {
+                  let items: any[] = [];
+                  try {
+                    items = JSON.parse(analisis.matriz_vulneracion_derechos || '[]');
+                  } catch { items = []; }
+
+                  const updateRow = (index: number, field: string, val: string) => {
+                    const newItems = [...items];
+                    newItems[index] = { ...newItems[index], [field]: val };
+                    setAnalisis({ ...analisis, matriz_vulneracion_derechos: JSON.stringify(newItems) });
+                  };
+                  const removeRow = (index: number) => {
+                    const newItems = items.filter((_, i) => i !== index);
+                    setAnalisis({ ...analisis, matriz_vulneracion_derechos: JSON.stringify(newItems) });
+                  };
+                  const addRow = () => {
+                    const newItems = [...items, { derecho: '', situacion: '', afectacion: '', factores: '', riesgo: '' }];
+                    setAnalisis({ ...analisis, matriz_vulneracion_derechos: JSON.stringify(newItems) });
+                  };
+
+                  return (
+                    <div style={{ width: '100%' }}>
+                      <div className={styles.matrixContainer}>
+                        <table className={styles.matrixTable}>
+                          <thead>
+                            <tr>
+                              <th style={{ width: '22%' }}>Derecho</th>
+                              <th style={{ width: '25%' }}>Situación evidenciada</th>
+                              <th style={{ width: '18%' }}>Tipo de afectación</th>
+                              <th style={{ width: '25%' }}>Factores asociados</th>
+                              <th style={{ width: '15%' }}>Nivel de riesgo</th>
+                              <th style={{ width: '50px' }}></th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                    <button type="button" onClick={addRow} className="btn btn-secondary">+ Agregar Instrumento</button>
-                  </div>
-                );
-              })()}
+                          </thead>
+                          <tbody>
+                            {items.length === 0 && (
+                              <tr>
+                                <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--on-surface-variant)', fontStyle: 'italic' }}>
+                                  No se han identificado vulneraciones. Añada una fila para comenzar.
+                                </td>
+                              </tr>
+                            )}
+                            {items.map((item, i) => (
+                              <tr key={i}>
+                                <td className={styles.matrixCell}>
+                                  <textarea className={styles.matrixInput} value={item.derecho} onChange={e => updateRow(i, 'derecho', e.target.value)} placeholder="Ej: Derecho a la salud..." />
+                                </td>
+                                <td className={styles.matrixCell}>
+                                  <textarea className={styles.matrixInput} value={item.situacion} onChange={e => updateRow(i, 'situacion', e.target.value)} placeholder="Describa los hallazgos..." />
+                                </td>
+                                <td className={styles.matrixCell}>
+                                  <select className={styles.matrixSelect} value={item.afectacion} onChange={e => updateRow(i, 'afectacion', e.target.value)}>
+                                    <option value="">Seleccione...</option>
+                                    <option value="Amenaza">Amenaza</option>
+                                    <option value="Vulneración">Vulneración</option>
+                                    <option value="Inobservancia">Inobservancia</option>
+                                  </select>
+                                </td>
+                                <td className={styles.matrixCell}>
+                                  <textarea className={styles.matrixInput} value={item.factores} onChange={e => updateRow(i, 'factores', e.target.value)} placeholder="Factores de riesgo/protección..." />
+                                </td>
+                                <td className={styles.matrixCell}>
+                                  <select className={styles.matrixSelect} value={item.riesgo} onChange={e => updateRow(i, 'riesgo', e.target.value)}>
+                                    <option value="">Seleccione...</option>
+                                    <option value="Bajo">Bajo</option>
+                                    <option value="Medio">Medio</option>
+                                    <option value="Alto">Alto</option>
+                                  </select>
+                                </td>
+                                <td className={styles.matrixCell}>
+                                  <button type="button" onClick={() => removeRow(i)} className={styles.removeRowBtn} title="Eliminar fila">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <button type="button" onClick={addRow} className="btn btn-secondary" style={{ marginBottom: '1.5rem', gap: '8px' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Añadir Derecho a la Matriz
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
+              <SectionObservation label="Observaciones" fieldName="analisis_matriz" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
             <div className="form-section">
-              <h3 className="form-section-title">Manifestaciones y Percepciones del NNA</h3>
-              <textarea className="input-field" rows={5} value={analisis.manifestaciones_nna || ''} onChange={e => setAnalisis({...analisis, manifestaciones_nna: e.target.value})} placeholder="Describa las manifestaciones y percepciones observadas..." />
+              <h4 className="form-section-title" style={{ fontSize: '1.1rem', opacity: 0.9 }}>11.3 Factores de Riesgo</h4>
+              <div className="input-group">
+                <textarea className="input-field" rows={4} value={analisis.factores_riesgo || ''} onChange={e => setAnalisis({...analisis, factores_riesgo: e.target.value})} placeholder="Identifique factores de riesgo..." />
+              </div>
+              <SectionObservation label="Observaciones" fieldName="analisis_riesgo" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
+
             <div className="form-section">
-              <h3 className="form-section-title">Matriz de Vulneración de Derechos</h3>
-              <textarea className="input-field" rows={5} value={analisis.matriz_vulneracion_derechos || ''} onChange={e => setAnalisis({...analisis, matriz_vulneracion_derechos: e.target.value})} placeholder="Detalle la matriz de vulneración de derechos..." />
+              <h4 className="form-section-title" style={{ fontSize: '1.1rem', opacity: 0.9 }}>11.4 Generatividad</h4>
+              <div className="input-group">
+                <textarea className="input-field" rows={4} value={analisis.generatividad || ''} onChange={e => setAnalisis({...analisis, generatividad: e.target.value})} placeholder="Aspectos de generatividad..." />
+              </div>
+              <SectionObservation label="Observaciones" fieldName="analisis_generatividad" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
+
             <div className="form-section">
-              <h3 className="form-section-title">Factores de Riesgo y Generatividad</h3>
-              <textarea className="input-field" rows={5} value={analisis.factores_riesgo_generatividad || ''} onChange={e => setAnalisis({...analisis, factores_riesgo_generatividad: e.target.value})} placeholder="Identifique factores de riesgo y generatividad..." />
+              <h4 className="form-section-title" style={{ fontSize: '1.1rem', opacity: 0.9 }}>11.5 Análisis Social</h4>
+              <div className="input-group">
+                <textarea className="input-field" rows={6} value={analisis.analisis_social || ''} onChange={e => setAnalisis({...analisis, analisis_social: e.target.value})} placeholder="Análisis social integral..." />
+              </div>
+              <SectionObservation label="Observaciones" fieldName="analisis_social" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
             </div>
+
             <div className="form-section">
-              <h3 className="form-section-title">Análisis Social y Recomendaciones</h3>
-              <textarea className="input-field" rows={6} value={analisis.analisis_recomendaciones || ''} onChange={e => setAnalisis({...analisis, analisis_recomendaciones: e.target.value})} placeholder="Análisis social y recomendaciones técnicas al despacho..." />
+              <h4 className="form-section-title" style={{ fontSize: '1.1rem', opacity: 0.9 }}>11.6 Recomendaciones</h4>
+              <div className="input-group">
+                <label>Recomendaciones Técnicas</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                  {(analisis.recomendaciones || []).map((rec, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+                      <span style={{ marginTop: '12px', color: 'var(--primary)' }}>•</span>
+                      <textarea 
+                        className="input-field" 
+                        rows={2} 
+                        value={rec} 
+                        onChange={e => {
+                          const newList = [...(analisis.recomendaciones || [])];
+                          newList[i] = e.target.value;
+                          setAnalisis({...analisis, recomendaciones: newList});
+                        }}
+                        placeholder="Escriba la recomendación..."
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          const newList = (analisis.recomendaciones || []).filter((_, idx) => idx !== i);
+                          setAnalisis({...analisis, recomendaciones: newList});
+                        }} 
+                        className="btn btn-tertiary" 
+                        style={{ color: 'var(--error)', padding: '8px' }}
+                      >✕</button>
+                    </div>
+                  ))}
+                  <button 
+                    type="button" 
+                    onClick={() => setAnalisis({...analisis, recomendaciones: [...(analisis.recomendaciones || []), '']})} 
+                    className="btn btn-secondary" 
+                    style={{ alignSelf: 'flex-start', borderStyle: 'dashed' }}
+                  >+ Añadir Recomendación</button>
+                </div>
+              </div>
+              <SectionObservation label="Observaciones" fieldName="analisis_recomendaciones" observations={entrevista.observaciones_campos || {}} onToggle={toggleObservation} onChangeNote={updateObservationNote} />
+            </div>
             </div>
           </div>
         )}
@@ -941,7 +1539,7 @@ export default function EntrevistaPage({ params }: { params: Promise<{ id: strin
           <div className="animate-slide-up">
             <h2 className={styles.stepTitle}>Anexos Fotográficos</h2>
             <div className="form-section">
-              <h3 className="form-section-title">Evidencia Visual</h3>
+              <h3 className="form-section-title">12. Anexos Fotográficos</h3>
               <p style={{ marginBottom: '1rem', color: 'var(--on-surface-variant)' }}>Sube aquí fotografías del entorno familiar, estado de la vivienda, o cualquier evidencia pertinente al caso. Serán añadidas al reporte final.</p>
               <div style={{ marginBottom: '1.5rem' }}>
                 <label className="btn btn-secondary" style={{ cursor: 'pointer', display: 'inline-flex' }}>

@@ -9,8 +9,10 @@ export interface Entrevista {
   dirigido_a: string;
   seccion: string;
   estado: 'borrador' | 'completado';
+  objetivo_verificacion?: string;
   genograma_data?: any;
   anexos_fotograficos?: any[];
+  observaciones_campos?: Record<string, { note: string, active: boolean }>;
   created_at?: string;
   updated_at?: string;
 }
@@ -40,6 +42,17 @@ export interface DatosNNA {
   pueblo_indigena: string;
   resguardo: string;
   lenguas: { lengua: string; clasificacion: string }[];
+}
+
+export interface DatosAgresor {
+  id?: string;
+  entrevista_id: string;
+  nombre: string;
+  edad: string;
+  lugar_residencia: string;
+  ocupacion: string;
+  grupo_poblacional_enfoque_diferencial: string;
+  parentesco: string;
 }
 
 export interface CondicionesHabitacionales {
@@ -130,11 +143,13 @@ export interface InformacionCuidador {
 export interface AnalisisSocial {
   id?: string;
   entrevista_id: string;
-  metodologia_instrumentos: string;
+  metodologia_instrumentos: string; // JSON: { metodologia: string, instrumento: string }[]
   manifestaciones_nna: string;
-  matriz_vulneracion_derechos: string;
-  factores_riesgo_generatividad: string;
-  analisis_recomendaciones: string;
+  matriz_vulneracion_derechos: string; // JSON
+  factores_riesgo: string;
+  generatividad: string;
+  analisis_social: string;
+  recomendaciones: string[]; // List of strings
 }
 
 // Options constants
